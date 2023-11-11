@@ -13,20 +13,22 @@ class Village:
         for p in self.people:
             self.tot_people.extend(p)
         self.village_pop = len(self.tot_people)
+        for ppl in self.tot_people:
+            ppl.relationship = [0.5 for i in range(self.village_pop)]
 
     def display(self):
         for house in self.houses:
-            print(house,)
-            print(f'Grandparents:')
+            print(house)
+            print(f'\nGrandparents:')
             for i in house.grand_parents:
                 print(i)
-            print(f'Parents:')
+            print(f'\nParents:')
             for i in house.parents:
                 print(i)
-            print(f'Children:')
+            print(f'\nChildren:')
             for i in house.children:
                 print(i)
-            print('---\n')
+            print('-'*100,'\n')
             
     def update_time(self, t):  # Updates the general energy level of the village
         if t<7:  # early morning
@@ -38,19 +40,22 @@ class Village:
         else:
             self.energy = 0.2
             
+    def people_interact(self):
+        pass
+        
             
         
 class Person:
-    def __init__(self, gender=None):
-        # self.energy = 1  # Reduces as the day go by
+    def __init__(self):
+        self.relationship = []
         self.mood = random()  # Random for each day
         self.name = choose_name()  # Just for fun
         self.age = 0
-        self.gender = None
+        # self.gender = None
         self.extrovertiness = random()  # How probable are they to meet others
     
     def __repr__(self):
-        return f'Name: {self.name} | Age: {self.age}'
+        return f'Name: {self.name} | Age: {self.age}| Relationship: {self.relationship}'
         
 class House:
     def __init__(self, house_num):

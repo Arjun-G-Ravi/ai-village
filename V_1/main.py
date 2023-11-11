@@ -8,7 +8,9 @@ def main():
     while True:
         os.system('clear')
         for t in range(24):
-            print(f"   DAY {day} |",f'Time = {t}:00\n','-'*10,'\n','-'*10)
+            v.update_time(t)
+            print(f"   DAY {day} |",f'Time = {t}:00 hr\n','-'*10,'\n','-'*10)
+            v.people_interact()
             v.display()        
             sleep(1)
         
