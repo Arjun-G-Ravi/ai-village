@@ -41,6 +41,13 @@ class Village:
             self.energy = 0.2
             
     def people_interact(self):
+        for ppl1 in self.tot_people:
+            for ppl2 in self.tot_people:
+                    self.update_relationship(ppl1, ppl2)
+                    # print('reln updated')
+                    
+                    
+    def update_relationship(self, ppl1, ppl2):
         pass
         
             
