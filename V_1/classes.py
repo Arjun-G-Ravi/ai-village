@@ -5,9 +5,14 @@ import os
 
 class Village:
     def __init__(self):
+        self.energy = 0
         self.num_houses = 3
         self.houses = [House(i+1) for i in range(self.num_houses)]
-        self.village_pop = sum([h.tot_pop for h in self.houses ])
+        self.people = [h.people for h in self.houses]
+        self.tot_people = []
+        for p in self.people:
+            self.tot_people.extend(p)
+        self.village_pop = len(self.tot_people)
 
     def display(self):
         for house in self.houses:
@@ -22,10 +27,22 @@ class Village:
             for i in house.children:
                 print(i)
             print('---\n')
+            
+    def update_time(self, t):  # Updates the general energy level of the village
+        if t<7:  # early morning
+            self.energy = 0.1
+        elif t<17:
+            self.energy = 1
+        elif t<20:
+            self.energy = 0.5
+        else:
+            self.energy = 0.2
+            
+            
         
 class Person:
     def __init__(self, gender=None):
-        self.energy = 1  # Reduces as the day go by
+        # self.energy = 1  # Reduces as the day go by
         self.mood = random()  # Random for each day
         self.name = choose_name()  # Just for fun
         self.age = 0
@@ -41,6 +58,8 @@ class House:
         self.grand_parents = [Person(), Person()]
         self.parents = [Person(), Person()]
         self.children = [Person(), Person()]
+        self.people = self.children + self.parents + self.grand_parents
+        # print(self.people)
         self.tot_pop = 6
         for pers in self.grand_parents:
             pers.age = randint(60, 100)
