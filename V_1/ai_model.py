@@ -1,7 +1,7 @@
 # This is to be used as API for different agents
 
 # Geohot stuff
-
+import os
 from io import StringIO
 from contextlib import redirect_stdout
 from tinygrad import Tensor, nn
@@ -105,8 +105,9 @@ class AIRA:
                 
 if __name__ == '__main__'                :
     mod = AIRA()
-    for i in range(2):
-        gen = mod.run('who is jon jones')
+    while True:
+        text = input("Q: ")
+        gen = mod.run(text)
         next_word = ''
         while True:
             try:
