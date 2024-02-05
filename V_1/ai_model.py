@@ -1,19 +1,17 @@
+# We are using Gemini model by Google
+
 class LLM:
     def __init__(self):
         import google.generativeai as genai
         genai.configure(api_key='AIzaSyDA6pSGmfSJdpQw0L1Re-y8AEnm4NbCxaw')
 
         safety_settings = [
-        {
-            "category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"},
-        {
-            "category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_NONE"},
-        {
-            "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_NONE"},
-        {
-            "category": "HARM_CATEGORY_DANGEROUS_CONTENT","threshold": "BLOCK_NONE"}]
+        {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"},
+        {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_NONE"},
+        {"category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_NONE"},
+        {"category": "HARM_CATEGORY_DANGEROUS_CONTENT","threshold": "BLOCK_NONE"}]
 
-        self.model = genai.GenerativeModel('gemini-pro')
+        self.model = genai.GenerativeModel('gemini-pro', safety_settings)
         self.generation_config=genai.types.GenerationConfig(candidate_count=1, max_output_tokens=700, temperature=0.7, top_p=0.5)
     
     def generate(self, inp):
@@ -26,4 +24,4 @@ class LLM:
     
 if __name__ == '__main__':
     llm = LLM()
-    print(llm.generate('What is the importance of cow'))
+    print(llm.generate(''))
