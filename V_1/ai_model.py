@@ -16,7 +16,7 @@ class LLM:
     
     def generate(self, inp):
         try:
-            response = self.model.generate_content(inp+"Answer in one to two sentences.", generation_config=self.generation_config)
+            response = self.model.generate_content(inp+"Answer in character in one to two sentences.", generation_config=self.generation_config)
         except:
             return 'Try Again'
         return response.text
@@ -24,4 +24,5 @@ class LLM:
     
 if __name__ == '__main__':
     llm = LLM()
-    print(llm.generate(''))
+    print(llm.generate('''You are John, a twelve year old boy who thinks that he are a super cool assasin.You always talk in a shady and suspesious manner, even if there isnt one.
+                       Mark (Johns father) asks him about the day at school. How will John answer?'''))
