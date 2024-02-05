@@ -25,4 +25,5 @@ class LLM:
 if __name__ == '__main__':
     llm = LLM()
     print(llm.generate('''You are John, a twelve year old boy who thinks that he are a super cool assasin.You always talk in a shady and suspesious manner, even if there isnt one.
-                       Mark (Johns father) asks him about the day at school. How will John answer?'''))
+                       As he was walking home from school, he saw a cow killing the mayor of the town. The cow also gave him a scary look and threatened him to never tell this thing to anybody. 
+                       The cow even mooed at him. This scared the life out of John. John doesn't dare tell this story to anyone. What will he say to his brother?'''))
