@@ -4,4 +4,4 @@ Anil, Gemini Team Google Rohan et al. “Gemini: A Family of Highly Capable Mult
 Yao, S., Yu, D., Zhao, J., Shafran, I., Griffiths, T.L., Cao, Y., & Narasimhan, K. (2023). Tree of Thoughts: Deliberate Problem Solving with Large Language Models. ArXiv, abs/2305.10601.
 Wei, J., Wang, X., Schuurmans, D., Bosma, M., Chi, E.H., Xia, F., Le, Q., & Zhou, D. (2022). Chain of Thought Prompting Elicits Reasoning in Large Language Models. ArXiv, abs/2201.11903.
 Shao, Y., Li, L., Dai, J., & Qiu, X. (2023). Character-LLM: A Trainable Agent for Role-Playing. ArXiv, abs/2310.10158.
-Du, Y., Li, S., Torralba, A., Tenenbaum, J.B., & Mordatch, I. (2023). Improving Factuality and Reasoning in Language Models through Multiagent Debate. ArXiv, abs/2305.14325.
+Du, Y., Li, S., Torralba, A., Tenenbaum, J.B., & Mordatch, I. (2023). Improving Factuality and Reasoning in Language Models through Multiagent Debate. ArXiv, abs/2305.14325.s
