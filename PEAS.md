@@ -1,4 +1,4 @@
-# "Peace" Analysis
+# "PEAS" Analysis
 
 - *Performance:* The 'energy' value for each AI agent. The 'resources' collected by each AI agent. 
 - *Environment:* The environment is the village simulated using pygame. 
