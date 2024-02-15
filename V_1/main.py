@@ -1,10 +1,11 @@
 class Person:
-    def __init__(self, name, position, base_character, memory, relationship):
+    def __init__(self, name, position, base_character, memory, relationship, energy):
         self.name = name
         self.position = position
         self.base_character = base_character
         self.memory = memory
         self.relationship = relationship
+        self.energy = energy
         
     def add_memory(self, mem, importance):
         import heapq
@@ -15,7 +16,7 @@ class Person:
         # should do something to give more importance to recent information
     
     def read_memory(self, n=3):
-        # should write a function to fetch relevant information, given a situation (grep should work?)
+        # should write a function to fetch relevant information, given a situation (grep should work?????????)
         ''' reads top 'n' important memories'''
         out = []
         for i in range(n):
