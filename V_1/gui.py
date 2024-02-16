@@ -13,7 +13,7 @@ class Window:
         #instantiate the world
         self.WORLD = World()
         if sys.platform == 'linux':
-            self.WORLD.set_texture(pygame.image.load("V_1/World_Texture_placeholder.png").convert())
+            self.WORLD.set_texture(pygame.image.load("V_1/World_Texture_placeholder.png").convert()) # Dont know if this repr works with windows. So created a split
         else:
             self.WORLD.set_texture(pygame.image.load("World_Texture_placeholder.png").convert())
         #start the event loop
