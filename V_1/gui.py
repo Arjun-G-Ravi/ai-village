@@ -1,5 +1,5 @@
 import pygame
-
+import sys
 pygame.init()
 class Window:
     #game attributes
@@ -12,7 +12,10 @@ class Window:
         self.WINDOW_WIDTH,self.WINDOW_HEIGHT = pygame.display.get_window_size()
         #instantiate the world
         self.WORLD = World()
-        self.WORLD.set_texture(pygame.image.load("World_Texture_placeholder.png").convert())
+        if sys.platform == 'linux':
+            self.WORLD.set_texture(pygame.image.load("V_1/World_Texture_placeholder.png").convert())
+        else:
+            self.WORLD.set_texture(pygame.image.load("World_Texture_placeholder.png").convert())
         #start the event loop
         self.event_loop()
 
