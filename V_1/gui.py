@@ -1,5 +1,5 @@
 import pygame
-
+import sys
 pygame.init()
 class Window:
     #game attributes

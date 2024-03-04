@@ -35,6 +35,7 @@ class Memory:
 if __name__ == '__main__':
     tom_character = 'Tom is always angry at everyone. He works at the mart.'
     tom_memory = Memory()
-    p1 = Person('Tom', (0,0), tom_character, tom_memory, [i for i in range(10)])
+    p1 = Person('Tom', (0,0), tom_character, tom_memory, [i for i in range(10)], 3)
+    print(p1)
     
         
