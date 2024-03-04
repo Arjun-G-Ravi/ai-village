@@ -1,5 +1,4 @@
-import pygame
-import sys
+import pygame, random
 pygame.init()
 class Window:
     #game attributes
@@ -114,6 +113,7 @@ class World:
         self.INVALID += [(i,69) for i in range(73,114) if (i,69) not in exceptions]                                    #bottom(market)
         self.INVALID += [(73,i) for i in range(39,70) if (113,i) not in exceptions]                                    #left(market)
         self.INVALID += [(113,i) for i in range(39,70) if (113,i) not in exceptions]                                   #right(market)
+        print(len(self.INVALID))
     
     def set_scale(self,scale):
         #update scale of world
@@ -142,7 +142,16 @@ class World:
         self.SCALED_TEXTURE = pygame.transform.scale_by(self.TEXTURE, self.SCALE)
 
 class Cow:
-    pass
+    REGION = ((61,5), (117,24))
+    STATE = "IDLE"
+    STATES = [ "IDLE", "EATING", "WALKING" ]
+    
+    def __init__(self):
+        self.X = random.randint(self.REGION[0][0], self.REGION[1][0])
+        self.Y = random.randint(self.REGION[0][1], self.REGION[1][1])
+        
+    def set_texture(self, path):
+        pass
 
 if __name__ == "__main__":
     win = Window()
