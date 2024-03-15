@@ -1,0 +1,6 @@
+WALK
+SLEEP
+EAT
+TALK
+----
+Add actions as seems necessary

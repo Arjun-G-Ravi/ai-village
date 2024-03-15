@@ -3,10 +3,13 @@ pygame.init()
 class Window:
     #game attributes
     DRAGGING = False
+    DT = 1
     
     def __init__(self):
         #create window with fullscreen
         self.SCREEN = pygame.display.set_mode((0,0),pygame.FULLSCREEN)
+        #create pygame clock
+        self.CLOCK = pygame.time.Clock()
         #take window width and height
         self.WINDOW_WIDTH,self.WINDOW_HEIGHT = pygame.display.get_window_size()
         #instantiate the world
@@ -60,6 +63,8 @@ class Window:
             self.update()
             #game rendering
             self.render()
+            #clock tick
+            self.DT = self.CLOCK.tick(30)/1000
 
 
     def update(self):
