@@ -1,5 +1,8 @@
-import pygame, random
+import pygame
+import random
+
 pygame.init()
+
 class Window:
     #game attributes
     DRAGGING = False
@@ -88,6 +91,7 @@ class World:
     CELL_SIZE = 16
     TEXTURE = None
     SCALED_TEXTURE = None
+    ENTITIES = []
     #important locations
     LOCATIONS = {
         "House1" : ((26,29),(27,29)),
@@ -136,6 +140,11 @@ class World:
     def draw(self, surface):
         #render the world texture
         surface.blit(self.SCALED_TEXTURE, (self.X, self.Y))
+        self.draw_entities(surface)
+    
+    def draw_entities(self,surface):
+        for entity in self.ENTITIES:
+            entity.render(surface)
     
     def set_texture(self, texture):
         #set the texture for the world
@@ -146,7 +155,20 @@ class World:
         #scale the texture for rendering
         self.SCALED_TEXTURE = pygame.transform.scale_by(self.TEXTURE, self.SCALE)
 
-class Cow:
+class Entity:
+    OBJECT = None
+    POSITION = (0,0)
+    FACING = "NORTH"
+    SPRITE = []
+    CURRENT_SPRITE = None
+    
+    def set_texture(self, path):
+        pass
+    
+    def render(self, surface):
+        surface.blit(self.CURRENT_SPRITE,self.POSITION)
+
+class Cow(Entity):
     REGION = ((61,5), (117,24))
     STATE = "IDLE"
     STATES = [ "IDLE", "EATING", "WALKING" ]
@@ -156,6 +178,27 @@ class Cow:
         self.Y = random.randint(self.REGION[0][1], self.REGION[1][1])
         
     def set_texture(self, path):
+        spritesheet = pygame.image.load(path).convert_alpha()
+        self.SPRITE = []
+        image = pygame.Surface([16,32])
+        image.blit(spritesheet,(0,0),(0,0,16,32))
+        image.set_colorkey(spritesheet.get_colorkey())
+        self.SPRITE.append(image)
+        image = pygame.Surface([16,32])
+        image.blit(spritesheet,(0,0),(16,0,16,32))
+        image.set_colorkey(spritesheet.get_colorkey())
+        self.SPRITE.append(image)
+        image = pygame.Surface([32,16])
+        image.blit(spritesheet,(0,0),(0,32,32,16))
+        image.set_colorkey(spritesheet.get_colorkey())
+        self.SPRITE.append(image)
+        image = pygame.Surface([32,16])
+        image.blit(spritesheet,(0,0),(0,48,32,16))
+        image.set_colorkey(spritesheet.get_colorkey())
+        self.SPRITE.append(image)
+        self.CURRENT_SPRITE = self.SPRITE[1]
+    
+    def state_machine(state, action):
         pass
 
 if __name__ == "__main__":
