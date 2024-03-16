@@ -63,7 +63,9 @@ class ScheduleMaker:
         write_out = writer.generate(f'''Using the base character of the AI, memory and energy level, write the continuation of the actions.
                         possible actions: {self.actions}
                         base character: {self.person.base_character}
-                        ''')
+                        Write a list five of actions the person is going to perform.
+                        Output only as a list of five actions, as shown in example, with only hte possible actions. Dont explain anything more.
+                        Example: [RUN, SLEEP, WORK, PRAY, SLEEP].''')
         
         print(write_out)
 
@@ -73,7 +75,7 @@ class ScheduleMaker:
 
 
 if __name__ == '__main__':
-    p1 = Person('Tom', (0,0), 'Shy', 'Forgot to shower today', [0], 1)
+    p1 = Person('Tom', (0,0), 'Shy', 'Forgot to shower today', [1], 1)
     sc = ScheduleMaker(p1)
     sc.write_schedule()
 
