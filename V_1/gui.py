@@ -94,6 +94,7 @@ class World:
     TEXTURE = None
     SCALED_TEXTURE = None
     ENTITIES = []
+    TIME = 0
     #important locations
     LOCATIONS = {
         "House1" : ((25,29),(26,29)),
@@ -238,6 +239,3 @@ class Cow(Entity):
     
     def state_machine(state, action):
         pass
-
-if __name__ == "__main__":
-    win = Window()
