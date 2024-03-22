@@ -49,10 +49,7 @@ class Person:
         for i in range(n):
             out.append(self.memory.data[i])
         return out
-        
-# class Memory:
-#     def __init__(self):
-#         self.data = []    
+  
 
 class ScheduleMaker:
     def __init__(self, person_object):
@@ -64,24 +61,23 @@ class ScheduleMaker:
         writer = LLM()
         write_out = writer.generate(f'''Using the base character of the AI, memory and energy level, write the actions performed by the AI agents in a day.
                         possible actions: {self.actions}
-                        base character: {self.person.base_character}+
+                        base character: {self.person.base_character}
                         relevant memory: {self.person.memory}
                         Write the actions and the time of start of action in a dictionary format. The time for dictionary should start at 6 and end at around 22.''' + 
                         '''
                         Format: {"Start time for activity":"Name of activity"}
                         Example: {6:"WAKE UP", 6.30: "BRUSH", 7:"EXCERCISE", 8:"DANCE", 9:"BATH", 10:"COOK", 14:"EAT", 15:"SLEEP", 17:"WAKE UP", 17.30:"READ", 19:"BATH", 20:"EAT", 21:"SLEEP"}.
-                        Remember to make the time table of the agent as realistic and reasonable as possible.
+                        Remember to make the time table of the agent as realistic and reasonable as possible and make sure that it follows the nature of the agent.
                         ''')
         
         # print(write_out)
         data = re.search(r'\{(.*?)\}', write_out).group(1)
-        print(data)
-        print(json.loads('{' + data + '}'))
-        # self.person.schedule = 
-
-
-
-
+        final_shedule = {}
+        for i in data.split(','):
+            l = i.split(':')
+            final_shedule[l[0].strip()] = l[1].strip()[1:-1]
+        print(final_shedule)
+        self.person.schedule = final_shedule
 
 if __name__ == '__main__':
     p1 = Person('Tom', (0,0), 'always sleepy, jobless', 'want to go to market to buy ipad ', [1], 1)
