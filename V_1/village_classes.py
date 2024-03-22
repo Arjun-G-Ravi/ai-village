@@ -1,3 +1,7 @@
+import heapq
+import re
+import json
+
 # We are using Gemini model by Google
 
 class LLM:
@@ -15,10 +19,11 @@ class LLM:
         self.generation_config=genai.types.GenerationConfig(candidate_count=1, max_output_tokens=700, temperature=0.9, top_p=.9)
     
     def generate(self, inp):
+        '''Generates output using Google API, given the input.'''
         try:
             response = self.model.generate_content(inp+"Answer in character in two sentences.", generation_config=self.generation_config)
         except:
-            return 'Try Again'
+            return 'Failed to fetch data from API'
         return response.text
 
 class Person:
@@ -29,53 +34,53 @@ class Person:
         self.memory = memory
         self.relationship = relationship
         self.energy = energy
-        self.schedule = [] # queue
+        self.schedule = {}
         
-    def add_memory(self, mem, importance):
-        import heapq
-        # if importance>1: importance=1
-        # if importance<0: importance=0
-        
-        heapq.heappush(self.memory.data, [-importance, mem]) # minus changes default min heap to max heap
+    def add_memory(self, data, importance):
+        if importance>1: importance=1
+        if importance<0: importance=0
+        heapq.heappush(self.memory.data, [-importance, data]) # minus changes default min heap to max heap
         # should do something to give more importance to recent information
     
     def read_memory(self, n=3):
-        # should write a function to fetch relevant information, given a situation (grep should work?????????)
+        # should write a function to fetch relevant information, given a situation (cosine similarity kinda stuff)
         ''' reads top 'n' important memories'''
         out = []
         for i in range(n):
             out.append(self.memory.data[i])
         return out
-        
-class Memory:
-    def __init__(self):
-        self.data = []    
+  
 
 class ScheduleMaker:
     def __init__(self, person_object):
         self.person = person_object
         with open('./actions.txt','r') as f:
             self.actions = f.read().split('\n')
-        # print(self.actions)
     
     def write_schedule(self):
         writer = LLM()
-        write_out = writer.generate(f'''Using the base character of the AI, memory and energy level, write the continuation of the actions.
+        write_out = writer.generate(f'''Using the base character of the AI, memory and energy level, write the actions performed by the AI agents in a day.
                         possible actions: {self.actions}
                         base character: {self.person.base_character}
-                        Write a list five of actions the person is going to perform.
-                        Output only as a list of five actions, as shown in example, with only hte possible actions. Dont explain anything more.
-                        Example: [RUN, SLEEP, WORK, PRAY, SLEEP].''')
+                        relevant memory: {self.person.memory}
+                        Write the actions and the time of start of action in a dictionary format. The time for dictionary should start at 6 and end at around 22.''' + 
+                        '''
+                        Format: {"Start time for activity":"Name of activity"}
+                        Example: {6:"WAKE UP", 6.30: "BRUSH", 7:"EXCERCISE", 8:"DANCE", 9:"BATH", 10:"COOK", 14:"EAT", 15:"SLEEP", 17:"WAKE UP", 17.30:"READ", 19:"BATH", 20:"EAT", 21:"SLEEP"}.
+                        Remember to make the time table of the agent as realistic and reasonable as possible and make sure that it follows the nature of the agent.
+                        ''')
         
-        print(write_out)
-
-
-        # choices = 
-
-
+        # print(write_out)
+        data = re.search(r'\{(.*?)\}', write_out).group(1)
+        final_shedule = {}
+        for i in data.split(','):
+            l = i.split(':')
+            final_shedule[l[0].strip()] = l[1].strip()[1:-1]
+        print(final_shedule)
+        self.person.schedule = final_shedule
 
 if __name__ == '__main__':
-    p1 = Person('Tom', (0,0), 'Shy', 'Forgot to shower today', [1], 1)
+    p1 = Person('Tom', (0,0), 'always sleepy, jobless', 'want to go to market to buy ipad ', [1], 1)
     sc = ScheduleMaker(p1)
     sc.write_schedule()
 
