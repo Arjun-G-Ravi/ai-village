@@ -1,1 +1,3 @@
-# nothing here
+import gui
+
+gui.Window()
