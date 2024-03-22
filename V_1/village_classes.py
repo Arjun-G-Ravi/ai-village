@@ -58,6 +58,7 @@ class ScheduleMaker:
             self.actions = f.read().split('\n')
     
     def write_schedule(self):
+        '''Adds the shedule to shedule method of the Person object'''
         writer = LLM()
         write_out = writer.generate(f'''Using the base character of the AI, memory and energy level, write the actions performed by the AI agents in a day.
                         possible actions: {self.actions}
@@ -70,19 +71,18 @@ class ScheduleMaker:
                         Remember to make the time table of the agent as realistic and reasonable as possible and make sure that it follows the nature of the agent.
                         ''')
         
-        # print(write_out)
         data = re.search(r'\{(.*?)\}', write_out).group(1)
         final_shedule = {}
         for i in data.split(','):
             l = i.split(':')
             final_shedule[l[0].strip()] = l[1].strip()[1:-1]
-        print(final_shedule)
         self.person.schedule = final_shedule
 
 if __name__ == '__main__':
-    p1 = Person('Tom', (0,0), 'always sleepy, jobless', 'want to go to market to buy ipad ', [1], 1)
+    p1 = Person('Tom', (0,0), 'loves singing and dancing', 'want to go to market to buy ipad ', [1], 1)
     sc = ScheduleMaker(p1)
     sc.write_schedule()
+    print(p1.schedule)
 
     # print(llm.generate('''You are John, a twelve year old boy who thinks that he are a super cool assasin.You always talk in a shady and suspesious manner, even if there isnt one.
     #                    As he was walking home from school, he saw a cow killing the mayor of the town. The cow also gave him a scary look and threatened him that is he tell anybody of the
