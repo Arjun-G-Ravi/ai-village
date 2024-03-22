@@ -17,7 +17,7 @@ class Window:
         self.WINDOW_WIDTH,self.WINDOW_HEIGHT = pygame.display.get_window_size()
         #instantiate the world
         self.WORLD = World()
-        self.WORLD.set_texture(pygame.image.load("Sample_world.png").convert())
+        self.WORLD.set_texture(pygame.image.load(r".\Sprites\Sample_World.png").convert())
         #start the event loop
         self.event_loop()
 
@@ -62,6 +62,8 @@ class Window:
                     self.WORLD.set_x(max(min(-posx,0),-self.WORLD.WIDTH * self.WORLD.CELL_SIZE * scale + self.WINDOW_WIDTH))
                     self.WORLD.set_y(max(min(-posy,0),-self.WORLD.HEIGHT * self.WORLD.CELL_SIZE * scale + self.WINDOW_HEIGHT))
                     self.WORLD.set_scale(scale)
+                    self.WORLD.scale_entities(scale)
+                        
             #game updates
             self.update()
             #game rendering
@@ -78,7 +80,7 @@ class Window:
         #render events
         self.SCREEN.fill("gray")
         self.WORLD.draw(self.SCREEN)
-        pygame.display.update()
+        pygame.display.flip()
 
 class World:
     #world attributes
@@ -94,7 +96,7 @@ class World:
     ENTITIES = []
     #important locations
     LOCATIONS = {
-        "House1" : ((26,29),(27,29)),
+        "House1" : ((25,29),(26,29)),
         "House2" : ((26,83),(27,83)),
         "House3" : ((145,34),(146,34)),
         "House4" : ((158,90),(159,90)),
@@ -104,6 +106,14 @@ class World:
     def __init__(self):
         #setting locations that cannot be walked on
         self.set_invalid([i for j in self.LOCATIONS for i in self.LOCATIONS[j]])
+        
+        #create list of entities in the environment
+        self.init_entities()
+    
+    def init_entities(self):
+                        
+        self.ENTITIES.append(Entity("John", r".\Sprites\Sprite-0002.png",self.SCALE))
+        self.ENTITIES.append(Cow("Cow",r".\Sprites\Cow_Sprite.png", self.SCALE))
     
     def set_invalid(self, exceptions):
         self.INVALID = [(i,0) for i in range(self.WIDTH)] + [(0,i) for i in range(self.HEIGHT)]                                 #top and left
@@ -122,12 +132,16 @@ class World:
         self.INVALID += [(i,69) for i in range(73,114) if (i,69) not in exceptions]                                    #bottom(market)
         self.INVALID += [(73,i) for i in range(39,70) if (113,i) not in exceptions]                                    #left(market)
         self.INVALID += [(113,i) for i in range(39,70) if (113,i) not in exceptions]                                   #right(market)
-        print(len(self.INVALID))
     
     def set_scale(self,scale):
         #update scale of world
         self.SCALE = scale
         self.scale()
+    
+    def scale_entities(self, scale):
+        #scale all the entities in the world
+        for entity in self.ENTITIES:
+            entity.scale_sprite(scale)
     
     def set_x(self,x):
         #update x coordinate of world
@@ -143,8 +157,9 @@ class World:
         self.draw_entities(surface)
     
     def draw_entities(self,surface):
+        #draws all the entities in the world
         for entity in self.ENTITIES:
-            entity.render(surface)
+            entity.render(surface, self.X, self.Y, self.SCALE)
     
     def set_texture(self, texture):
         #set the texture for the world
@@ -156,30 +171,50 @@ class World:
         self.SCALED_TEXTURE = pygame.transform.scale_by(self.TEXTURE, self.SCALE)
 
 class Entity:
+    NAME = ""
     OBJECT = None
-    POSITION = (0,0)
+    X,Y = 32,32
     FACING = "NORTH"
-    SPRITE = []
+    SPRITE = {}
     CURRENT_SPRITE = None
     
-    def set_texture(self, path):
-        pass
+    def __init__(self, name, path, scale):
+        self.NAME = name
+        self.set_texture(path, scale)
     
-    def render(self, surface):
-        surface.blit(self.CURRENT_SPRITE,self.POSITION)
+    def set_texture(self, path, scale):
+        #splits the spritesheet of the entities
+        dirs = ["SOUTH", "NORTH", "EAST", "WEST"]
+        spritesheet = pygame.image.load(path).convert_alpha()
+        for i in range(4):
+            image = pygame.Surface([16,16])
+            image.set_colorkey(spritesheet.get_at((0,0)))
+            image.blit(spritesheet,(0,0),(i*16,0,16,16), pygame.BLEND_ALPHA_SDL2)
+            self.SPRITE[dirs[i]] = image
+        self.CURRENT_SPRITE = pygame.transform.scale_by(self.SPRITE[self.FACING], scale)
+     
+    def scale_sprite(self, scale):
+        #saves the scaled sprite
+        self.CURRENT_SPRITE = pygame.transform.scale_by(self.SPRITE[self.FACING], scale)
+    
+    def render(self, surface, x_offset, y_offset, scale):
+        #renders the sprite to the screen
+        surface.blit(self.CURRENT_SPRITE, ((self.X * scale) + x_offset, (self.Y * scale) + y_offset))
 
 class Cow(Entity):
     REGION = ((61,5), (117,24))
     STATE = "IDLE"
     STATES = [ "IDLE", "EATING", "WALKING" ]
+    SPRITE = []
     
-    def __init__(self):
-        self.X = random.randint(self.REGION[0][0], self.REGION[1][0])
-        self.Y = random.randint(self.REGION[0][1], self.REGION[1][1])
+    def __init__(self, name, path, scale):
+        self.X = random.randint(self.REGION[0][0], self.REGION[1][0])*scale*16
+        self.Y = random.randint(self.REGION[0][1], self.REGION[1][1])*scale*16
         
-    def set_texture(self, path):
+        self.set_texture(path, scale)
+        
+    def set_texture(self, path, scale):
         spritesheet = pygame.image.load(path).convert_alpha()
-        self.SPRITE = []
         image = pygame.Surface([16,32])
         image.blit(spritesheet,(0,0),(0,0,16,32))
         image.set_colorkey(spritesheet.get_colorkey())
@@ -196,7 +231,10 @@ class Cow(Entity):
         image.blit(spritesheet,(0,0),(0,48,32,16))
         image.set_colorkey(spritesheet.get_colorkey())
         self.SPRITE.append(image)
-        self.CURRENT_SPRITE = self.SPRITE[1]
+        self.CURRENT_SPRITE = pygame.transform.scale_by(self.SPRITE[1], scale)
+    
+    def scale_sprite(self, scale):
+        self.CURRENT_SPRITE = pygame.transform.scale_by(self.SPRITE[1], scale)
     
     def state_machine(state, action):
         pass
