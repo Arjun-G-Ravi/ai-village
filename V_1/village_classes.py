@@ -51,7 +51,17 @@ class Person:
         return out
   
 class ConversationAI:
-    def __init__(self, p1, p2)
+    def __init__(self, p1, p2):
+        self.p1 = p1
+        self.p2 = p2
+    
+    def perform_conversation():
+        # Create AI that takes into accoutn of memory and character of both agents and then talk. Also call update_stats funciion().
+        pass
+
+    def update_stats(person):
+        # update the energy, memory and relationship of the agents.
+        pass
 class ScheduleMaker:
     def __init__(self, person_object):
         self.person = person_object
@@ -84,6 +94,7 @@ if __name__ == '__main__':
     sc = ScheduleMaker(p1)
     sc.write_schedule()
     print(p1.schedule)
+
 
     # print(llm.generate('''You are John, a twelve year old boy who thinks that he are a super cool assasin.You always talk in a shady and suspesious manner, even if there isnt one.
     #                    As he was walking home from school, he saw a cow killing the mayor of the town. The cow also gave him a scary look and threatened him that is he tell anybody of the
