@@ -62,6 +62,8 @@ class ConversationAI:
     def update_stats(person):
         # update the energy, memory and relationship of the agents.
         pass
+
+    
 class ScheduleMaker:
     def __init__(self, person_object):
         self.person = person_object
