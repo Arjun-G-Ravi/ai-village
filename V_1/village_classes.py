@@ -50,7 +50,8 @@ class Person:
             out.append(self.memory.data[i])
         return out
   
-
+class ConversationAI:
+    def __init__(self, p1, p2)
 class ScheduleMaker:
     def __init__(self, person_object):
         self.person = person_object
