@@ -42,6 +42,7 @@ class Window:
                 elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
                     #currently not dragging the screen
                     self.DRAGGING = False
+                #zoom the world
                 elif event.type == pygame.MOUSEMOTION:
                     if self.DRAGGING:
                         #calculation of world coordinates after dragging
@@ -91,10 +92,14 @@ class World:
     WIDTH = 200
     HEIGHT = 100
     CELL_SIZE = 16
+    #texture for the world
     TEXTURE = None
     SCALED_TEXTURE = None
+    #entities in the world
     ENTITIES = []
+    #Time attributes
     TIME = 0
+    MAX_TIME = 48         # 24 * 2 (30 minute intervals)
     #important locations
     LOCATIONS = {
         "House1" : ((25,29),(26,29)),
@@ -112,7 +117,7 @@ class World:
         self.init_entities()
     
     def init_entities(self):
-                        
+        #create the entities in the world
         self.ENTITIES.append(Entity("John", r".\Sprites\Sprite-0002.png",self.SCALE))
         self.ENTITIES.append(Cow("Cow",r".\Sprites\Cow_Sprite.png", self.SCALE))
     
@@ -138,6 +143,10 @@ class World:
         #update scale of world
         self.SCALE = scale
         self.scale()
+    
+    def scale(self):
+        #scale the texture for rendering
+        self.SCALED_TEXTURE = pygame.transform.scale_by(self.TEXTURE, self.SCALE)
     
     def scale_entities(self, scale):
         #scale all the entities in the world
@@ -167,17 +176,20 @@ class World:
         self.TEXTURE = texture
         self.scale()
         
-    def scale(self):
-        #scale the texture for rendering
-        self.SCALED_TEXTURE = pygame.transform.scale_by(self.TEXTURE, self.SCALE)
 
 class Entity:
+    #entity attributes
     NAME = ""
     OBJECT = None
     X,Y = 32,32
+    #entity sprite attributes
     FACING = "NORTH"
     SPRITE = {}
     CURRENT_SPRITE = None
+    #entity actions
+    with open('./actions.txt','r') as file:
+            ACTIONS = file.read().split('\n')
+    STATE = "IDLE"
     
     def __init__(self, name, path, scale):
         self.NAME = name
@@ -204,8 +216,7 @@ class Entity:
 
 class Cow(Entity):
     REGION = ((61,5), (117,24))
-    STATE = "IDLE"
-    STATES = [ "IDLE", "EATING", "WALKING" ]
+    ACTIONS = [ "IDLE", "EATING", "WALKING" ]
     SPRITE = []
     
     def __init__(self, name, path, scale):
@@ -236,6 +247,3 @@ class Cow(Entity):
     
     def scale_sprite(self, scale):
         self.CURRENT_SPRITE = pygame.transform.scale_by(self.SPRITE[1], scale)
-    
-    def state_machine(state, action):
-        pass
