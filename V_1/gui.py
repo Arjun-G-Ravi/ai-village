@@ -17,7 +17,7 @@ class Window:
         self.WINDOW_WIDTH,self.WINDOW_HEIGHT = pygame.display.get_window_size()
         #instantiate the world
         self.WORLD = World()
-        self.WORLD.set_texture(pygame.image.load(r".\Sprites\Sample_World.png").convert())
+        self.WORLD.set_texture(pygame.image.load(r"./Sprites/Sample_World.png").convert())
         #start the event loop
         self.event_loop()
 
@@ -118,8 +118,8 @@ class World:
     
     def init_entities(self):
         #create the entities in the world
-        self.ENTITIES.append(Entity("John", r".\Sprites\Sprite-0002.png",self.SCALE))
-        self.ENTITIES.append(Cow("Cow",r".\Sprites\Cow_Sprite.png", self.SCALE))
+        self.ENTITIES.append(Entity("John", r"./Sprites/Sprite-0002.png",self.SCALE))
+        self.ENTITIES.append(Cow("Cow",r"./Sprites/Cow_Sprite.png", self.SCALE))
     
     def set_invalid(self, exceptions):
         self.INVALID = [(i,0) for i in range(self.WIDTH)] + [(0,i) for i in range(self.HEIGHT)]                                 #top and left
