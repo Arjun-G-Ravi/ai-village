@@ -16,7 +16,7 @@ class LLM:
         {"category": "HARM_CATEGORY_DANGEROUS_CONTENT","threshold": "BLOCK_NONE"}]
 
         self.model = genai.GenerativeModel('gemini-pro', safety_settings)
-        self.generation_config=genai.types.GenerationConfig(candidate_count=1, max_output_tokens=700, temperature=0.9, top_p=.9)
+        self.generation_config=genai.types.GenerationConfig(candidate_count=1, max_output_tokens=700, temperature=0.7, top_p=.9)
     
     def generate(self, inp):
         '''Generates output using Google API, given the input.'''
@@ -55,12 +55,15 @@ class ConversationAI:
         self.p1 = p1
         self.p2 = p2
     
-    def perform_conversation():
+    def _perform_conversation():
         # Create AI that takes into accoutn of memory and character of both agents and then talk. Also call update_stats funciion().
         pass
 
-    def update_stats(person):
+    def _update_stats(person):
         # update the energy, memory and relationship of the agents.
+        pass
+
+    def create_thread_and_perform_conversation():
         pass
 
     
@@ -77,7 +80,7 @@ class ScheduleMaker:
                         possible actions: {self.actions}
                         base character: {self.person.base_character}
                         relevant memory: {self.person.memory}
-                        Write the actions and the time of start of action in a dictionary format. The time for dictionary should start at 6 and end at around 22.''' + 
+                        Write the actions and the time of start of action in a dictionary format. The time for dictionary should start at 6 by waking up and end at around 22 by going to sleep.''' + 
                         '''
                         Format: {"Start time for activity":"Name of activity"}
                         Example: {6:"WAKE UP", 6.30: "BRUSH", 7:"EXCERCISE", 8:"DANCE", 9:"BATH", 10:"COOK", 14:"EAT", 15:"SLEEP", 17:"WAKE UP", 17.30:"READ", 19:"BATH", 20:"EAT", 21:"SLEEP"}.
@@ -92,12 +95,19 @@ class ScheduleMaker:
         self.person.schedule = final_shedule
 
 if __name__ == '__main__':
-    p1 = Person('Tom', (0,0), 'loves singing and dancing', 'want to go to market to buy ipad ', [1], 1)
-    sc = ScheduleMaker(p1)
-    sc.write_schedule()
-    print(p1.schedule)
+    pass
+    # Testing conversation AI
 
 
+
+
+    # Testing scheduler
+    # p1 = Person('Tom', (0,0), 'loves singing and dancing', 'have to go to work at 9 ', [1], 1)
+    # sc = ScheduleMaker(p1)
+    # sc.write_schedule()
+    # print(p1.schedule)
+
+    # Test llm text generation
     # print(llm.generate('''You are John, a twelve year old boy who thinks that he are a super cool assasin.You always talk in a shady and suspesious manner, even if there isnt one.
     #                    As he was walking home from school, he saw a cow killing the mayor of the town. The cow also gave him a scary look and threatened him that is he tell anybody of the
     #                    incident, then the cow will stomp him to death. Even the slightest clue and John is done. The cow even mooed at him. This scared the life out of John. 
