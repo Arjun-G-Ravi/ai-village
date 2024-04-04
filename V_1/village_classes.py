@@ -51,17 +51,24 @@ class ConversationAI:
         conv = self.llm.generate(f'''Generate a relevant conversation between {self.p1.name} and {self.p2.name} using the following details.
 {self.p1.name} has the base character: {self.p1.base_character}.
 Relevant memory of {self.p1.name}: {self.p1.memory}.
-Relationship towards {self.p1.name}: {self.p1.relationship[self.p2.name]}. Here closer to 0 indicates bad relation and hatred. 1 means really good friends.
 
 {self.p2.name} has the base character: {self.p2.base_character}.
 Relevant memory of {self.p2.name}: {self.p2.memory}.
-Relationship towards {self.p2.name}: {self.p2.relationship[self.p1.name]}. Here closer to 0 indicates bad relation and hatred. 1 means really good friends.
 
+Relationship between  {self.p2.name} and {self.p2.name}: {self.p2.relationship[self.p1.name]}. Here closer to 0 indicates bad relation and hatred. 1 means really good friends.
 Example Format:
+<CONV BEGINS>
 {self.p1.name}: Conversation relevent to memory, base charater and relationship with {self.p2.name}
 {self.p2.name}: Conversation relevent to memory, base charater and relationship with {self.p1.name}
+{self.p1.name}: Conversation relevent to memory, base charater and relationship with {self.p2.name}
+{self.p2.name}: Conversation relevent to memory, base charater and relationship with {self.p1.name}
+<CONV ENDS>
+Now, generate the conversation. 
 
-Now, generate the conversations with ATLEAST 4 conversations.''')
+After the conversation, create a small summary of the conversation that happened between them as SUMMARY: relevant summary
+Also generate a number between 0 and 1 that expresses the current relationship between both of them in the format: 
+RELATIONSHIP:number''')
+
         return conv
     
     def _update_stats(self, person):
@@ -115,12 +122,17 @@ if __name__ == '__main__':
 
 
     # Testing scheduler
-    p1 = Person('Tom', (0,0), 'loves singing and dancing', [1], 1, ['Joy', 'Tim', 'John', 'Terry'])
-    print(p1.memory)
+    p1 = Person('Tom', (0,0), 'Tom is an introvert and a shy person who likes to talk about cows.', 1, ['Joy', 'Tim', 'John', 'Terry'])
+    p2 = Person('Joy', (0,0), 'Joy is an extrovert who loves to create conversation and interact with people.', 1, ['Tom', 'Tim', 'John', 'Terry'])
+    # print(p1.memory)
+    conv = ConversationAI()
+    conv.create_thread_and_perform_conversation(p1, p2)
 
-    sc = ScheduleMaker(p1)
-    sc.write_schedule()
-    print(p1.schedule)
+
+
+    # sc = ScheduleMaker(p1)
+    # sc.write_schedule()
+    # print(p1.schedule)
 
     # Test llm text generation
     # print(llm.generate('''You are John, a twelve year old boy who thinks that he are a super cool assasin.You always talk in a shady and suspesious manner, even if there isnt one.
