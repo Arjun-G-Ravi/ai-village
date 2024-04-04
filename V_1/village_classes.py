@@ -34,7 +34,7 @@ class Person:
         self.memory = memory
         self.relationship = relationship
         self.energy = energy
-        self.schedule = {}
+        self.schedule = {} # Schedult is a dictionary of time:action
         
     def add_memory(self, data, importance):
         if importance>1: importance=1
@@ -95,17 +95,19 @@ class ScheduleMaker:
         self.person.schedule = final_shedule
 
 if __name__ == '__main__':
-    pass
+
+
     # Testing conversation AI
 
 
 
 
     # Testing scheduler
-    # p1 = Person('Tom', (0,0), 'loves singing and dancing', 'have to go to work at 9 ', [1], 1)
-    # sc = ScheduleMaker(p1)
-    # sc.write_schedule()
-    # print(p1.schedule)
+    p1 = Person('Tom', (0,0), 'loves singing and dancing', 'have to go to work at 9 ', [1], 1)
+
+    sc = ScheduleMaker(p1)
+    sc.write_schedule()
+    print(p1.schedule)
 
     # Test llm text generation
     # print(llm.generate('''You are John, a twelve year old boy who thinks that he are a super cool assasin.You always talk in a shady and suspesious manner, even if there isnt one.
