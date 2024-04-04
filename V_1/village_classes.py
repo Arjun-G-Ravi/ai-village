@@ -7,7 +7,7 @@ import json
 class LLM:
     def __init__(self):
         import google.generativeai as genai
-        genai.configure(api_key='AIzaSyDA6pSGmfSJdpQw0L1Re-y8AEnm4NbCxaw')
+        genai.configure(api_key='AIzaSyDA6pSGmfSJdpQw0L1Re-y8AEnm4NbCxaw') # API Key
 
         safety_settings = [
         {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"},
@@ -27,44 +27,56 @@ class LLM:
         return response.text
 
 class Person:
-    def __init__(self, name, position, base_character, memory, relationship, energy):
+    def __init__(self, name, position, base_character, energy, villagers):
         self.name = name
         self.position = position
         self.base_character = base_character
-        self.memory = memory
-        self.relationship = relationship
+        self.schedule = {} # Schedule is a dictionary of time:action
+        self.relationship = {v:0.5 for v in villagers} # maybe randomise?
         self.energy = energy
-        self.schedule = {} # Schedult is a dictionary of time:action
+        self.villagers = villagers
+        self.memory = {v:'' for v in villagers} 
         
-    def add_memory(self, data, importance):
-        if importance>1: importance=1
-        if importance<0: importance=0
-        heapq.heappush(self.memory.data, [-importance, data]) # minus changes default min heap to max heap
-        # should do something to give more importance to recent information
+    def add_memory(self, data, person_name):
+        '''This function exists so that we can readily change the data structure of self.memory in the future.'''
+        self.memory[person_name] = data
     
-    def read_memory(self, n=3):
-        # should write a function to fetch relevant information, given a situation (cosine similarity kinda stuff)
-        ''' reads top 'n' important memories'''
-        out = []
-        for i in range(n):
-            out.append(self.memory.data[i])
-        return out
   
 class ConversationAI:
-    def __init__(self, p1, p2):
-        self.p1 = p1
-        self.p2 = p2
-    
-    def _perform_conversation():
-        # Create AI that takes into accoutn of memory and character of both agents and then talk. Also call update_stats funciion().
-        pass
+    def __init__(self):
+        self.llm = LLM()
 
-    def _update_stats(person):
+    def _perform_conversation(self):
+        # Create AI that takes into accoutn of memory and character of both agents and then talk. Also call update_stats funciion().
+        conv = self.llm.generate(f'''Generate a relevant conversation between {self.p1.name} and {self.p2.name} using the following details.
+{self.p1.name} has the base character: {self.p1.base_character}.
+Relevant memory of {self.p1.name}: {self.p1.memory}.
+Relationship towards {self.p1.name}: {self.p1.relationship[self.p2.name]}. Here closer to 0 indicates bad relation and hatred. 1 means really good friends.
+
+{self.p2.name} has the base character: {self.p2.base_character}.
+Relevant memory of {self.p2.name}: {self.p2.memory}.
+Relationship towards {self.p2.name}: {self.p2.relationship[self.p1.name]}. Here closer to 0 indicates bad relation and hatred. 1 means really good friends.
+
+Example Format:
+{self.p1.name}: Conversation relevent to memory, base charater and relationship with {self.p2.name}
+{self.p2.name}: Conversation relevent to memory, base charater and relationship with {self.p1.name}
+
+Now, generate the conversations with ATLEAST 4 conversations.''')
+        return conv
+    
+    def _update_stats(self, person):
         # update the energy, memory and relationship of the agents.
         pass
 
-    def create_thread_and_perform_conversation():
-        pass
+    def _fetch_relevant_memory(self,person):
+        all_memory = person.memory
+        
+
+    def create_thread_and_perform_conversation(self, p1, p2):
+        # Create a thread here to do the conversation
+        self.p1 = p1
+        self.p2 = p2
+        print(self._perform_conversation())
 
     
 class ScheduleMaker:
@@ -103,7 +115,8 @@ if __name__ == '__main__':
 
 
     # Testing scheduler
-    p1 = Person('Tom', (0,0), 'loves singing and dancing', 'have to go to work at 9 ', [1], 1)
+    p1 = Person('Tom', (0,0), 'loves singing and dancing', [1], 1, ['Joy', 'Tim', 'John', 'Terry'])
+    print(p1.memory)
 
     sc = ScheduleMaker(p1)
     sc.write_schedule()
