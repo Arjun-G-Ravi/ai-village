@@ -75,8 +75,8 @@ RELATIONSHIP:number''')
         # update the energy, memory and relationship of the agents.
         pass
 
-    def _fetch_relevant_memory(self,person):
-        all_memory = person.memory
+    # def _fetch_relevant_memory(self,person):
+    #     all_memory = person.memory
         
 
     def create_thread_and_perform_conversation(self, p1, p2):
