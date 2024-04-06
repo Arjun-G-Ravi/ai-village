@@ -48,7 +48,7 @@ class ConversationAI:
 
     def _perform_conversation(self):
         # Create AI that takes into accoutn of memory and character of both agents and then talk. Also call update_stats funciion().
-        conv = self.llm.generate(f'''Generate a relevant conversation between {self.p1.name} and {self.p2.name} using the following details.
+        self.conv = self.llm.generate(f'''Generate a relevant conversation between {self.p1.name} and {self.p2.name} using the following details.
 {self.p1.name} has the base character: {self.p1.base_character}.
 Relevant memory of {self.p1.name}: {self.p1.memory}.
 
@@ -68,11 +68,14 @@ Now, generate the conversation.
 After the conversation, create a small summary of the conversation that happened between them as SUMMARY: relevant summary
 Also generate a number between 0 and 1 that expresses the current relationship between both of them in the format: 
 RELATIONSHIP:number''')
-
-        return conv
+        self._update_stats(self.p1)
+        self._update_stats(self.p2)
+        return self.conv
     
     def _update_stats(self, person):
         # update the energy, memory and relationship of the agents.
+        sum = self.conv.split('SUMMARY')[1]
+        print(sum)
         pass
 
     # def _fetch_relevant_memory(self,person):
@@ -83,7 +86,8 @@ RELATIONSHIP:number''')
         # Create a thread here to do the conversation
         self.p1 = p1
         self.p2 = p2
-        print(self._perform_conversation())
+        self._perform_conversation()
+
 
     
 class ScheduleMaker:
