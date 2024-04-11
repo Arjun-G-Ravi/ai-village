@@ -1,12 +1,16 @@
 import pygame
 import random
+import tasks
 
 pygame.init()
 
 class Window:
     #game attributes
     DRAGGING = False
+    #time attributes
     DT = 1
+    TIME = 0
+    TIMER = 0
     
     def __init__(self):
         #create window with fullscreen
@@ -18,6 +22,8 @@ class Window:
         #instantiate the world
         self.WORLD = World()
         self.WORLD.set_texture(pygame.image.load(r"./Sprites/Sample_World.png").convert())
+        
+        self.FONT = pygame.font.SysFont("calibri", 16)
         #start the event loop
         self.event_loop()
 
@@ -71,16 +77,27 @@ class Window:
             self.render()
             #clock tick
             self.DT = self.CLOCK.tick(30)/1000
+            self.TIMER += self.DT
+            if self.TIMER > 15:
+                self.TIMER = 0
+                self.TIME += 1
+                self.WORLD.time_step()
 
 
     def update(self):
-        #update events
-        pass
+        self.WORLD.update()
     
     def render(self):
         #render events
         self.SCREEN.fill("gray")
         self.WORLD.draw(self.SCREEN)
+        
+        text = self.FONT.render(str(self.TIMER), True, (0,255,0))
+        self.SCREEN.blit(text, (0,0))
+        
+        text = self.FONT.render(str(self.TIME), True, (0,255,0))
+        self.SCREEN.blit(text, (0,16))
+        
         pygame.display.flip()
 
 class World:
@@ -175,7 +192,10 @@ class World:
         #set the texture for the world
         self.TEXTURE = texture
         self.scale()
-        
+    
+    def update(self):
+        for entity in self.ENTITIES:
+            entity.update(self)
 
 class Entity:
     #entity attributes
@@ -190,6 +210,8 @@ class Entity:
     with open('./actions.txt','r') as file:
             ACTIONS = file.read().split('\n')
     STATE = "IDLE"
+    ACTION_TIME = 0
+    PATH = []
     
     def __init__(self, name, path, scale):
         self.NAME = name
@@ -210,13 +232,16 @@ class Entity:
         #saves the scaled sprite
         self.CURRENT_SPRITE = pygame.transform.scale_by(self.SPRITE[self.FACING], scale)
     
+    def update(self, world):
+        print(world.SCALE)
+    
     def render(self, surface, x_offset, y_offset, scale):
         #renders the sprite to the screen
         surface.blit(self.CURRENT_SPRITE, ((self.X * scale) + x_offset, (self.Y * scale) + y_offset))
 
 class Cow(Entity):
     REGION = ((61,5), (117,24))
-    ACTIONS = [ "IDLE", "EATING", "WALKING" ]
+    ACTIONS = [ "IDLE", "EAT", "WALK", ]
     SPRITE = []
     
     def __init__(self, name, path, scale):
@@ -244,6 +269,22 @@ class Cow(Entity):
         image.set_colorkey(spritesheet.get_colorkey())
         self.SPRITE.append(image)
         self.CURRENT_SPRITE = pygame.transform.scale_by(self.SPRITE[1], scale)
+    
+    def next_action(self):
+        self.STATE = random.choice(self.ACTIONS[1:])
+    
+    def update(self, world):
+        if self.STATE == "IDLE":
+            if ACTION_TIME == 0:
+                self.next_action()
+            else:
+                #do action
+                pass
+        if self.STATE == "WALK":
+            dest = (random.randint(self.REGION[0][0], self.REGION[1][0]),random.randint(self.REGION[0][1], self.REGION[1][1]))
+            self.ACTION_TIME = 2
+            tasks.TRANSITION["WALK"](self, dest, world.INVALID)
+            
     
     def scale_sprite(self, scale):
         self.CURRENT_SPRITE = pygame.transform.scale_by(self.SPRITE[1], scale)
