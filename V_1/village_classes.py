@@ -38,19 +38,19 @@ class Person:
         self.villagers = villagers
         self.memory = {v:'' for v in villagers} 
         
-    def __repr__(self):
-        return f'''Person: {self.name}
-    Base character: {self.base_character}
-    Energy: {self.energy}
-    Schedule: {self.schedule}
-    Relationship: {self.relationship}
-    Memory: {self.memory}'''
-
     # def __repr__(self):
     #     return f'''Person: {self.name}
     # Base character: {self.base_character}
-    # Energy: {self.energy}'''
+    # Energy: {self.energy}
     # Schedule: {self.schedule}
+    # Relationship: {self.relationship}
+    # Memory: {self.memory}'''
+
+    def __repr__(self):
+        return f'''Person: {self.name}
+    Energy: {self.energy}
+    Relationship: {self.relationship}
+    Memory: {self.memory}'''
     
   
 class ConversationAI:
@@ -100,9 +100,12 @@ RELATIONSHIP:number.(Write only the number. Don't add any text here)''')
                 if matches: person1.relationship[person2.name] = matches[0]
                 if matches: person2.relationship[person1.name] = matches[0]
 
-        person1.energy -= round(random.randint(1,3)*0.1, 1)
+        person1.energy -= random.randint(1,3)*0.1
+        person1.energy = round(person1.energy, 1)
         if person1.energy < 0: person1.energy = 0
+
         person2.energy -= round(random.randint(1,3)*0.1, 1)
+        person2.energy = round(person2.energy, 1)
         if person2.energy < 0: person2.energy = 0
 
 
