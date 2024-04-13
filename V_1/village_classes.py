@@ -63,7 +63,6 @@ class ConversationAI:
         self.p2 = p2
         self._perform_conversation()
         self._update_stats(p1,p2)
-        self._update_stats(p2,p1)
 
     def _perform_conversation(self):
         # Create AI that takes into accoutn of memory and character of both agents and then talk. Also call update_stats funciion().
@@ -89,17 +88,22 @@ Also generate a number between 0 and 1 that expresses the current relationship b
 RELATIONSHIP:number.(Write only the number. Don't add any text here)''')
         return self.conv
     
-    def _update_stats(self, person, other_person):
+    def _update_stats(self, person1, person2):
         # update the energy, memory and relationship of the agents.
         conv_list = self.conv.split('\n')
         for conversation in conv_list:
             if 'SUMMARY:' in conversation or 'SUMMARY :' in conversation:
-                person.memory[other_person.name] += conversation[9: ]
+                person1.memory[person2.name] += conversation[9: ]
+                person2.memory[person1.name] += conversation[9: ]
             if 'RELATIONSHIP:' or 'RELATIONSHIP :' in conversation:
                 matches = re.findall(r'\b0\.\d+\b', conversation)
-                if matches: person.relationship[other_person.name] = matches[0]
-        person.energy -= round(random.randint(1,3)*0.1, 1)
-        if person.energy < 0: person.energy = 0
+                if matches: person1.relationship[person2.name] = matches[0]
+                if matches: person2.relationship[person1.name] = matches[0]
+
+        person1.energy -= round(random.randint(1,3)*0.1, 1)
+        if person1.energy < 0: person1.energy = 0
+        person2.energy -= round(random.randint(1,3)*0.1, 1)
+        if person2.energy < 0: person2.energy = 0
 
 
 
