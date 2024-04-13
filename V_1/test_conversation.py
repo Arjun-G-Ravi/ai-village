@@ -10,15 +10,18 @@ p3 = Person('Jane', (0,0), base_character_dict['Jane'], 1, ['Tom', 'Jane', 'John
 print(p1)
 print(p2)
 print(p3)
+print()
 
 conv = ConversationAI()
 l = [p1, p2, p3]
-for _ in range(3):
+for _ in range(10):
     p1,p2 = random.sample(l,2)
 
-    conv.create_thread_and_perform_conversation(p1,p2)
+    conv.create_thread_and_perform_conversation(p1,p2, display=True)
+
     print()
 
     print(p1)
     print(p2)
+    print('-' *10)
     # print(p3)

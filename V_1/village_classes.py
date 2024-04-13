@@ -57,11 +57,12 @@ class ConversationAI:
     def __init__(self):
         self.llm = LLM()
 
-    def create_thread_and_perform_conversation(self, p1, p2):
+    def create_thread_and_perform_conversation(self, p1, p2, display = False):
         # Create a thread here to do the conversation
         self.p1 = p1
         self.p2 = p2
-        self._perform_conversation()
+        conv = self._perform_conversation()
+        if display: print(conv)
         self._update_stats(p1,p2)
 
     def _perform_conversation(self):
@@ -81,7 +82,7 @@ Example Format:
 {self.p1.name}: Conversation relevent to memory, base charater and relationship with {self.p2.name}
 {self.p2.name}: Conversation relevent to memory, base charater and relationship with {self.p1.name}
 <CONV ENDS>
-Now, generate the conversation in the above format only. 
+Now, generate the conversation in the above format only. Use the memory to create a flow of conversations. 
 
 After the conversation, create a small summary of the conversation that happened between them as SUMMARY: relevant summary
 Also generate a number between 0 and 1 that expresses the current relationship between both of them in the format: 
