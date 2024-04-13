@@ -1,6 +1,7 @@
 import heapq
 import re
 import json
+import random
 
 # We are using Gemini model by Google
 
@@ -16,7 +17,7 @@ class LLM:
         {"category": "HARM_CATEGORY_DANGEROUS_CONTENT","threshold": "BLOCK_NONE"}]
 
         self.model = genai.GenerativeModel('gemini-pro', safety_settings)
-        self.generation_config=genai.types.GenerationConfig(candidate_count=1, max_output_tokens=700, temperature=0.7, top_p=.9)
+        self.generation_config=genai.types.GenerationConfig(candidate_count=1, max_output_tokens=900, temperature=0.7, top_p=.9)
     
     def generate(self, inp):
         '''Generates output using Google API, given the input.'''
@@ -32,19 +33,37 @@ class Person:
         self.position = position
         self.base_character = base_character
         self.schedule = {} # Schedule is a dictionary of time:action
-        self.relationship = {v:0.5 for v in villagers} # maybe randomise?
+        self.relationship = {v:0.5 for v in villagers} # maybe randomise at the start?
         self.energy = energy
         self.villagers = villagers
         self.memory = {v:'' for v in villagers} 
         
-    def add_memory(self, data, person_name):
-        '''This function exists so that we can readily change the data structure of self.memory in the future.'''
-        self.memory[person_name] = data
+    def __repr__(self):
+        return f'''Person: {self.name}
+    Base character: {self.base_character}
+    Energy: {self.energy}
+    Schedule: {self.schedule}
+    Relationship: {self.relationship}
+    Memory: {self.memory}'''
+
+    # def __repr__(self):
+    #     return f'''Person: {self.name}
+    # Base character: {self.base_character}
+    # Energy: {self.energy}'''
+    # Schedule: {self.schedule}
     
   
 class ConversationAI:
     def __init__(self):
         self.llm = LLM()
+
+    def create_thread_and_perform_conversation(self, p1, p2):
+        # Create a thread here to do the conversation
+        self.p1 = p1
+        self.p2 = p2
+        self._perform_conversation()
+        self._update_stats(p1,p2)
+        self._update_stats(p2,p1)
 
     def _perform_conversation(self):
         # Create AI that takes into accoutn of memory and character of both agents and then talk. Also call update_stats funciion().
@@ -63,33 +82,27 @@ Example Format:
 {self.p1.name}: Conversation relevent to memory, base charater and relationship with {self.p2.name}
 {self.p2.name}: Conversation relevent to memory, base charater and relationship with {self.p1.name}
 <CONV ENDS>
-Now, generate the conversation. 
+Now, generate the conversation in the above format only. 
 
 After the conversation, create a small summary of the conversation that happened between them as SUMMARY: relevant summary
 Also generate a number between 0 and 1 that expresses the current relationship between both of them in the format: 
-RELATIONSHIP:number''')
-        self._update_stats(self.p1)
-        self._update_stats(self.p2)
+RELATIONSHIP:number.(Write only the number. Don't add any text here)''')
         return self.conv
     
-    def _update_stats(self, person):
+    def _update_stats(self, person, other_person):
         # update the energy, memory and relationship of the agents.
-        sum = self.conv.split('SUMMARY')[1]
-        print(sum)
-        pass
-
-    # def _fetch_relevant_memory(self,person):
-    #     all_memory = person.memory
-        
-
-    def create_thread_and_perform_conversation(self, p1, p2):
-        # Create a thread here to do the conversation
-        self.p1 = p1
-        self.p2 = p2
-        self._perform_conversation()
+        conv_list = self.conv.split('\n')
+        for conversation in conv_list:
+            if 'SUMMARY:' in conversation or 'SUMMARY :' in conversation:
+                person.memory[other_person.name] += conversation[9: ]
+            if 'RELATIONSHIP:' or 'RELATIONSHIP :' in conversation:
+                matches = re.findall(r'\b0\.\d+\b', conversation)
+                if matches: person.relationship[other_person.name] = matches[0]
+        person.energy -= round(random.randint(1,3)*0.1, 1)
+        if person.energy < 0: person.energy = 0
 
 
-    
+
 class ScheduleMaker:
     def __init__(self, person_object):
         self.person = person_object
@@ -128,9 +141,10 @@ if __name__ == '__main__':
     # Testing scheduler
     p1 = Person('Tom', (0,0), 'Tom is an introvert and a shy person who likes to talk about cows.', 1, ['Joy', 'Tim', 'John', 'Terry'])
     p2 = Person('Joy', (0,0), 'Joy is an extrovert who loves to create conversation and interact with people.', 1, ['Tom', 'Tim', 'John', 'Terry'])
-    # print(p1.memory)
+    print(p1)
     conv = ConversationAI()
     conv.create_thread_and_perform_conversation(p1, p2)
+    print(p1)
 
 
 
