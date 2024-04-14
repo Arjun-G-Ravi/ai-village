@@ -2,6 +2,7 @@ import heapq
 import re
 import json
 import random
+import threading
 
 # We are using Gemini model by Google
 
@@ -57,13 +58,25 @@ class ConversationAI:
     def __init__(self):
         self.llm = LLM()
 
-    def create_thread_and_perform_conversation(self, p1, p2, display = False):
-        # Create a thread here to do the conversation
+    # def create_thread_and_perform_conversation(self, p1, p2, display = False):
+    #     # this is the code that performs the task without threading
+    #     self.p1 = p1
+    #     self.p2 = p2
+    #     conv = self._perform_conversation()
+    #     if display: print(conv)
+    #     self._update_stats(p1,p2)
+
+    def create_thread_and_perform_conversation(self, p1, p2, display=False):
         self.p1 = p1
         self.p2 = p2
+        thread = threading.Thread(target=self._thread_function, args=(p1, p2, display))
+        thread.start()
+        thread.join()
+
+    def _thread_function(self, p1, p2, display):
         conv = self._perform_conversation()
+        self._update_stats(p1, p2)
         if display: print(conv)
-        self._update_stats(p1,p2)
 
     def _perform_conversation(self):
         # Create AI that takes into accoutn of memory and character of both agents and then talk. Also call update_stats funciion().
