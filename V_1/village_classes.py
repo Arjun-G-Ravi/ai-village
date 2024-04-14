@@ -58,14 +58,6 @@ class ConversationAI:
     def __init__(self):
         self.llm = LLM()
 
-    # def create_thread_and_perform_conversation(self, p1, p2, display = False):
-    #     # this is the code that performs the task without threading
-    #     self.p1 = p1
-    #     self.p2 = p2
-    #     conv = self._perform_conversation()
-    #     if display: print(conv)
-    #     self._update_stats(p1,p2)
-
     def create_thread_and_perform_conversation(self, p1, p2, display=False):
         self.p1 = p1
         self.p2 = p2
