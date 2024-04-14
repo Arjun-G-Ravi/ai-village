@@ -1,6 +1,4 @@
-import heapq
 import re
-import json
 import random
 import threading
 
@@ -39,7 +37,7 @@ class Person:
         self.villagers = villagers
         self.memory = {v:'' for v in villagers} 
         
-    # def __repr__(self):
+    # def __repr__(self): # Very detailed repr
     #     return f'''Person: {self.name}
     # Base character: {self.base_character}
     # Energy: {self.energy}
@@ -71,7 +69,6 @@ class ConversationAI:
         if display: print(conv)
 
     def _perform_conversation(self):
-        # Create AI that takes into accoutn of memory and character of both agents and then talk. Also call update_stats funciion().
         self.conv = self.llm.generate(f'''Generate a relevant conversation between {self.p1.name} and {self.p2.name} using the following details.
 {self.p1.name} has the base character: {self.p1.base_character}.
 Relevant memory of {self.p1.name}: {self.p1.memory}.
@@ -114,7 +111,7 @@ RELATIONSHIP:number.(Write only the number. Don't add any text here)''')
         person2.energy = round(person2.energy, 1)
         if person2.energy < 0: person2.energy = 0
 
-
+        
 
 class ScheduleMaker:
     def __init__(self, person_object):
@@ -145,13 +142,7 @@ class ScheduleMaker:
 
 if __name__ == '__main__':
 
-
     # Testing conversation AI
-
-
-
-
-    # Testing scheduler
     p1 = Person('Tom', (0,0), 'Tom is an introvert and a shy person who likes to talk about cows.', 1, ['Joy', 'Tim', 'John', 'Terry'])
     p2 = Person('Joy', (0,0), 'Joy is an extrovert who loves to create conversation and interact with people.', 1, ['Tom', 'Tim', 'John', 'Terry'])
     print(p1)
@@ -159,8 +150,7 @@ if __name__ == '__main__':
     conv.create_thread_and_perform_conversation(p1, p2)
     print(p1)
 
-
-
+    # Testing scheduler
     # sc = ScheduleMaker(p1)
     # sc.write_schedule()
     # print(p1.schedule)
