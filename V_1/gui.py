@@ -78,11 +78,9 @@ class Window:
             #clock tick
             self.DT = self.CLOCK.tick(30)/1000
             self.TIMER += self.DT
-            if self.TIMER > 15:
-                self.TIMER = 0
-                self.TIME += 1
-                self.WORLD.time_step()
-
+            if self.TIME != (self.TIMER//15)%48:
+                self.TIME = (self.TIMER//15)%48
+                #self.WORLD.time_step()
 
     def update(self):
         self.WORLD.update()
@@ -92,11 +90,13 @@ class Window:
         self.SCREEN.fill("gray")
         self.WORLD.draw(self.SCREEN)
         
-        text = self.FONT.render(str(self.TIMER), True, (0,255,0))
+        time = int(self.TIME//2)
+        if self.TIME%2==0:
+            time = str(time)+":00"
+        else:
+            time = str(time)+":30"
+        text = self.FONT.render(time, True, (0,255,0))
         self.SCREEN.blit(text, (0,0))
-        
-        text = self.FONT.render(str(self.TIME), True, (0,255,0))
-        self.SCREEN.blit(text, (0,16))
         
         pygame.display.flip()
 
@@ -196,6 +196,10 @@ class World:
     def update(self):
         for entity in self.ENTITIES:
             entity.update(self)
+    
+    def time_step(self):
+        for ent in self.ENTITIES:
+            ent.ACTION_TIME = max(0,ent.ACTION_TIME-1)
 
 class Entity:
     #entity attributes
@@ -233,58 +237,9 @@ class Entity:
         self.CURRENT_SPRITE = pygame.transform.scale_by(self.SPRITE[self.FACING], scale)
     
     def update(self, world):
-        print(world.SCALE)
+        pass
+        # print(world.SCALE)
     
     def render(self, surface, x_offset, y_offset, scale):
         #renders the sprite to the screen
         surface.blit(self.CURRENT_SPRITE, ((self.X * scale) + x_offset, (self.Y * scale) + y_offset))
-
-class Cow(Entity):
-    REGION = ((61,5), (117,24))
-    ACTIONS = [ "IDLE", "EAT", "WALK", ]
-    SPRITE = []
-    
-    def __init__(self, name, path, scale):
-        self.X = random.randint(self.REGION[0][0], self.REGION[1][0])*scale*16
-        self.Y = random.randint(self.REGION[0][1], self.REGION[1][1])*scale*16
-        
-        self.set_texture(path, scale)
-        
-    def set_texture(self, path, scale):
-        spritesheet = pygame.image.load(path).convert_alpha()
-        image = pygame.Surface([16,32])
-        image.blit(spritesheet,(0,0),(0,0,16,32))
-        image.set_colorkey(spritesheet.get_colorkey())
-        self.SPRITE.append(image)
-        image = pygame.Surface([16,32])
-        image.blit(spritesheet,(0,0),(16,0,16,32))
-        image.set_colorkey(spritesheet.get_colorkey())
-        self.SPRITE.append(image)
-        image = pygame.Surface([32,16])
-        image.blit(spritesheet,(0,0),(0,32,32,16))
-        image.set_colorkey(spritesheet.get_colorkey())
-        self.SPRITE.append(image)
-        image = pygame.Surface([32,16])
-        image.blit(spritesheet,(0,0),(0,48,32,16))
-        image.set_colorkey(spritesheet.get_colorkey())
-        self.SPRITE.append(image)
-        self.CURRENT_SPRITE = pygame.transform.scale_by(self.SPRITE[1], scale)
-    
-    def next_action(self):
-        self.STATE = random.choice(self.ACTIONS[1:])
-    
-    def update(self, world):
-        if self.STATE == "IDLE":
-            if ACTION_TIME == 0:
-                self.next_action()
-            else:
-                #do action
-                pass
-        if self.STATE == "WALK":
-            dest = (random.randint(self.REGION[0][0], self.REGION[1][0]),random.randint(self.REGION[0][1], self.REGION[1][1]))
-            self.ACTION_TIME = 2
-            tasks.TRANSITION["WALK"](self, dest, world.INVALID)
-            
-    
-    def scale_sprite(self, scale):
-        self.CURRENT_SPRITE = pygame.transform.scale_by(self.SPRITE[1], scale)
