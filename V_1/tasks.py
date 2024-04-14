@@ -39,9 +39,8 @@ def pathfinder(start,end,invalid):
                 parent[child] = node
     return []
 
-def WALK():
-    #get a location and go to that location
-    pass
+def WALK(entity, loc, invalid):
+    path = pathfinder((entity.X,entity.Y),loc, invalid)
 
 def SLEEP():
     #get location of bed and go to that location
@@ -139,3 +138,8 @@ def WATCH_TV():
     #get location of tv and go to that location
     #watch tv
     pass
+
+TRANSITION = {
+    "WALK" : WALK,
+    "EAT" : EAT,
+}
