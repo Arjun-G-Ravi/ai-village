@@ -21,7 +21,7 @@ class Window:
         self.WINDOW_WIDTH,self.WINDOW_HEIGHT = pygame.display.get_window_size()
         #instantiate the world
         self.WORLD = World()
-        self.WORLD.set_texture(pygame.image.load(r"./Sprites/Sample_World.png").convert())
+        self.WORLD.set_texture(pygame.image.load(r"./Sprites/First_Temp.png").convert())
         
         self.FONT = pygame.font.SysFont("calibri", 16)
         #start the event loop
@@ -135,8 +135,19 @@ class World:
     
     def init_entities(self):
         #create the entities in the world
-        self.ENTITIES.append(Entity("John", r"./Sprites/Sprite-0002.png",self.SCALE))
-        self.ENTITIES.append(Cow("Cow",r"./Sprites/Cow_Sprite.png", self.SCALE))
+        schedule = {
+            "6:00" : "WAKE UP",
+            "6:30" : "BRUSH",
+            "7:00" : "COOK",
+            "7:30" : "EAT",
+            "8:00" : "GO TO WORK",
+            "15:00" : "COME BACK HOME",
+            "16:00" : "READ",
+            "18:00" : "COOK",
+            "19:00" : "EAT",
+            "21:00" : "SLEEP",
+        }
+        self.ENTITIES.append(Entity("John", r"./Sprites/Sample_Character.png",self.SCALE,schedule))
     
     def set_invalid(self, exceptions):
         self.INVALID = [(i,0) for i in range(self.WIDTH)] + [(0,i) for i in range(self.HEIGHT)]                                 #top and left
@@ -205,36 +216,70 @@ class Entity:
     #entity attributes
     NAME = ""
     OBJECT = None
-    X,Y = 32,32
+    X,Y = 496,384
     #entity sprite attributes
-    FACING = "NORTH"
+    FACING = "S"
     SPRITE = {}
-    CURRENT_SPRITE = None
+    STATE = "IDLE"
+    FRAME = 0
     #entity actions
     with open('./actions.txt','r') as file:
             ACTIONS = file.read().split('\n')
-    STATE = "IDLE"
     ACTION_TIME = 0
-    PATH = []
     
-    def __init__(self, name, path, scale):
+    def __init__(self, name, path, scale, schedule):
         self.NAME = name
-        self.set_texture(path, scale)
+        self.SCHEDULE = schedule
+        self.PATH = list()
+        self.set_texture(path)
+        self.scale_sprite(scale)
     
-    def set_texture(self, path, scale):
-        #splits the spritesheet of the entities
-        dirs = ["SOUTH", "NORTH", "EAST", "WEST"]
+    def set_texture(self, path):
         spritesheet = pygame.image.load(path).convert_alpha()
-        for i in range(4):
-            image = pygame.Surface([16,16])
+        #idle and walking sprites
+        key = ["IDLE","WALK"]
+        for i in range(2):
+            self.SPRITE[key[i]] = {"N":[],"S":[],"E":[],"W":[]}
+            dirs = ["E","N","W","S"]
+            for j in range(24):
+                image = pygame.Surface([16,32])
+                image.set_colorkey(spritesheet.get_at((0,0)))
+                image.blit(spritesheet,(0,0),(j*16,i*32,16,32), pygame.BLEND_ALPHA_SDL2)
+                self.SPRITE[key[i]][dirs[j//6]].append(image)
+        #sitting sprites
+        self.SPRITE["SIT"] = {"E":[],"W":[]}
+        dirs = ["E","W"]
+        for i in range(12):
+            image = pygame.Surface([16,32])
             image.set_colorkey(spritesheet.get_at((0,0)))
-            image.blit(spritesheet,(0,0),(i*16,0,16,16), pygame.BLEND_ALPHA_SDL2)
-            self.SPRITE[dirs[i]] = image
-        self.CURRENT_SPRITE = pygame.transform.scale_by(self.SPRITE[self.FACING], scale)
-     
+            image.blit(spritesheet,(0,0),(i*16,64,16,32), pygame.BLEND_ALPHA_SDL2)
+            self.SPRITE["SIT"][dirs[i//6]].append(image)
+        #reading sprites
+        self.SPRITE["READ"] = []
+        for i in range(12):
+            image = pygame.Surface([16,32])
+            image.set_colorkey(spritesheet.get_at((0,0)))
+            image.blit(spritesheet,(0,0),((i+12)*16,64,16,32), pygame.BLEND_ALPHA_SDL2)
+            self.SPRITE["READ"].append(image)
+        #sleeping sprites
+        self.SPRITE["SLEEP"] = []
+        for i in range(6):
+            image = pygame.Surface([16,32])
+            image.set_colorkey(spritesheet.get_at((0,0)))
+            image.blit(spritesheet,(0,0),((i)*16,96,16,32), pygame.BLEND_ALPHA_SDL2)
+            self.SPRITE["SLEEP"].append(image)
+    
     def scale_sprite(self, scale):
         #saves the scaled sprite
-        self.CURRENT_SPRITE = pygame.transform.scale_by(self.SPRITE[self.FACING], scale)
+        self.CURRENT_SPRITE = []
+        if self.STATE in ["IDLE","WALK","SIT"]:
+            for frame in self.SPRITE[self.STATE][self.FACING]:
+                frame = pygame.transform.scale_by(frame,scale)
+                self.CURRENT_SPRITE.append(frame)
+        else:
+            for frame in self.SPRITE[self.STATE]:
+                frame = pygame.transform.scale_by(frame,scale)
+                self.CURRENT_SPRITE.append(frame)
     
     def update(self, world):
         pass
@@ -242,4 +287,9 @@ class Entity:
     
     def render(self, surface, x_offset, y_offset, scale):
         #renders the sprite to the screen
-        surface.blit(self.CURRENT_SPRITE, ((self.X * scale) + x_offset, (self.Y * scale) + y_offset))
+        if self.STATE == "READ":
+            surface.blit(self.CURRENT_SPRITE[self.FRAME//3], ((self.X * scale) + x_offset, (self.Y * scale) + y_offset - 16*scale))
+            self.FRAME = (self.FRAME+1)%36
+        else:
+            surface.blit(self.CURRENT_SPRITE[self.FRAME//3], ((self.X * scale) + x_offset, (self.Y * scale) + y_offset - 16*scale))
+            self.FRAME = (self.FRAME+1)%18
