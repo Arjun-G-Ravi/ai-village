@@ -16,7 +16,7 @@ class LLM:
         {"category": "HARM_CATEGORY_DANGEROUS_CONTENT","threshold": "BLOCK_NONE"}]
 
         self.model = genai.GenerativeModel('gemini-pro', safety_settings)
-        self.generation_config=genai.types.GenerationConfig(candidate_count=1, max_output_tokens=900, temperature=0.7, top_p=.9)
+        self.generation_config=genai.types.GenerationConfig(candidate_count=1, max_output_tokens=1000, temperature=0.5, top_p=.9)
     
     def generate(self, inp):
         '''Generates output using Google API, given the input.'''
@@ -24,6 +24,7 @@ class LLM:
             response = self.model.generate_content(inp+"Answer in character in two sentences.", generation_config=self.generation_config)
         except:
             return 'Failed to fetch data from API'
+        # print(response.text)
         return response.text
 
 class Person:
@@ -118,8 +119,9 @@ class ScheduleMaker:
         self.person = person_object
         with open('./actions.txt','r') as f:
             self.actions = f.read().split('\n')
+            self.actions.remove('TALK')
     
-    def write_schedule(self):
+    def create_new_schedule(self):
         '''Adds the shedule to shedule method of the Person object'''
         writer = LLM()
         write_out = writer.generate(f'''Using the base character of the AI, memory and energy level, write the actions performed by the AI agents in a day.
@@ -129,8 +131,35 @@ class ScheduleMaker:
                         Write the actions and the time of start of action in a dictionary format. The time for dictionary should start at 6 by waking up and end at around 22 by going to sleep.''' + 
                         '''
                         Format: {"Start time for activity":"Name of activity"}
-                        Example: {6:"WAKE UP", 6.30: "BRUSH", 7:"EXCERCISE", 8:"DANCE", 9:"BATH", 10:"COOK", 14:"EAT", 15:"SLEEP", 17:"WAKE UP", 17.30:"READ", 19:"BATH", 20:"EAT", 21:"SLEEP"}.
+                        Example: {"6:00":"WAKE UP", "6:30":"BRUSH", "7:00":"EXCERCISE", "8:00":"DANCE", "9:00":"BATH", "10:00":"COOK", "14:30":"EAT", "15:00":"SLEEP", "17:00":"WAKE UP", "17.30":"READ", "19:00":"BATH", "20:00":"EAT", "21:00":"SLEEP"}.
                         Remember to make the time table of the agent as realistic and reasonable as possible and make sure that it follows the nature of the agent.
+                        ''')
+        
+        # data = re.search(r'\{(.*?)\}', write_out).group(1)
+        # print(data)
+        pattern = r'\{(.*?)\}'
+        data = '{' +re.findall(pattern, write_out)[0] + '}'
+        print('cow')
+        print(data)
+        final_shedule = {}
+        for i in data.split(','):
+            l = i.split(':')
+            final_shedule[l[0].strip()] = l[1].strip()[1:-1]
+        self.person.schedule = final_shedule
+
+    def change_schedule(self, reason):
+        '''Changes the schedule of a person, because of another person's intervention(the summary will be given in as reason.)'''
+        writer = LLM()
+        write_out = writer.generate(f'''Using the base character of the AI, memory and factor that affect schedule, write the actions performed by the AI agents for a day.
+                        possible actions: {self.actions}
+                        base character: {self.person.base_character}
+                        relevant memory: {self.person.memory}
+                        Factor that affect schedule: {reason}
+                        Write the actions and the time of start of action in a dictionary format. The time for dictionary should start at 6 by waking up and end at around 22 by going to sleep.''' + 
+                        '''
+                        Format: {"Start time for activity":"Name of activity"}
+                        Example: {"6:00":"WAKE UP", "6:30":"BRUSH", "7:00":"EXCERCISE", "8:00":"DANCE", "9:00":"BATH", "10:00":"COOK", "14:30":"EAT", "15:00":"SLEEP", "17:00":"WAKE UP", "17.30":"READ", "19:00":"BATH", "20:00":"EAT", "21:00":"SLEEP"}.
+                        Remember to make the time table of the agent as realistic and reasonable as possible and make sure that it follows the nature of the agent. Also look at the reason and include that in the schedule.
                         ''')
         
         data = re.search(r'\{(.*?)\}', write_out).group(1)
@@ -140,20 +169,24 @@ class ScheduleMaker:
             final_shedule[l[0].strip()] = l[1].strip()[1:-1]
         self.person.schedule = final_shedule
 
+
 if __name__ == '__main__':
 
-    # Testing conversation AI
+    # # Testing conversation AI
     p1 = Person('Tom', (0,0), 'Tom is an introvert and a shy person who likes to talk about cows.', 1, ['Joy', 'Tim', 'John', 'Terry'])
-    p2 = Person('Joy', (0,0), 'Joy is an extrovert who loves to create conversation and interact with people.', 1, ['Tom', 'Tim', 'John', 'Terry'])
-    print(p1)
-    conv = ConversationAI()
-    conv.create_thread_and_perform_conversation(p1, p2)
-    print(p1)
+    # p2 = Person('Joy', (0,0), 'Joy is an extrovert who loves to create conversation and interact with people.', 1, ['Tom', 'Tim', 'John', 'Terry'])
+    # print(p1)
+    # conv = ConversationAI()
+    # conv.create_thread_and_perform_conversation(p1, p2)
+    # print(p1)
 
     # Testing scheduler
-    # sc = ScheduleMaker(p1)
-    # sc.write_schedule()
-    # print(p1.schedule)
+    sc = ScheduleMaker(p1)
+    sc.change_schedule('Tom and Jane decided to meet in the market at time 15.')
+    print(p1.schedule)
+    print()
+    sc.create_new_schedule() 
+    print(p1.schedule)
 
     # Test llm text generation
     # print(llm.generate('''You are John, a twelve year old boy who thinks that he are a super cool assasin.You always talk in a shady and suspesious manner, even if there isnt one.
