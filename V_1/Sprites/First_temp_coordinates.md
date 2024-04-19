@@ -19,8 +19,10 @@
 # Reading and TV
 - TV_Seat1: 560, 320
 - TV_Seat2: 576, 320
-- Bookshelf: 
-- Reading seat: 464, 288
+- Bookshelf: 464, 288
+- Reading seat: 448, 336
 
-# Room: Low Left
-# Room: Low Right 
+# Outer bench
+- bench: 544, 384
+
+# Unreachable spaces
