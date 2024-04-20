@@ -38,7 +38,7 @@ class Person:
         self.villagers = villagers
         self.memory = {v:'' for v in villagers} 
         
-    # def __repr__(self): # Very detailed repr
+    # def __repr__(self): # Very detailed repr for testing
     #     return f'''Person: {self.name}
     # Base character: {self.base_character}
     # Energy: {self.energy}
