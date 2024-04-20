@@ -1,7 +1,7 @@
 import re
 import random
 import threading
-
+import ast
 # We are using Gemini model by Google
 
 class LLM:
@@ -16,7 +16,7 @@ class LLM:
         {"category": "HARM_CATEGORY_DANGEROUS_CONTENT","threshold": "BLOCK_NONE"}]
 
         self.model = genai.GenerativeModel('gemini-pro', safety_settings)
-        self.generation_config=genai.types.GenerationConfig(candidate_count=1, max_output_tokens=1000, temperature=0.5, top_p=.9)
+        self.generation_config=genai.types.GenerationConfig(candidate_count=1, max_output_tokens=1000, temperature=0.3, top_p=.9)
     
     def generate(self, inp):
         '''Generates output using Google API, given the input.'''
@@ -124,49 +124,40 @@ class ScheduleMaker:
     def create_new_schedule(self):
         '''Adds the shedule to shedule method of the Person object'''
         writer = LLM()
-        write_out = writer.generate(f'''Using the base character of the AI, memory and energy level, write the actions performed by the AI agents in a day.
+        write_out = writer.generate(f'''Using the base character of the AI and memory, write the actions performed by the AI agents in a day.
                         possible actions: {self.actions}
                         base character: {self.person.base_character}
                         relevant memory: {self.person.memory}
-                        Write the actions and the time of start of action in a dictionary format. The time for dictionary should start at 6 by waking up and end at around 22 by going to sleep.''' + 
+                        Write the actions and the time of start of action in a dictionary format. The time for dictionary should start at 6:00 by waking up and end at around 22:00 by going to sleep.''' + 
                         '''
                         Format: {"Start time for activity":"Name of activity"}
                         Example: {"6:00":"WAKE UP", "6:30":"BRUSH", "7:00":"EXCERCISE", "8:00":"DANCE", "9:00":"BATH", "10:00":"COOK", "14:30":"EAT", "15:00":"SLEEP", "17:00":"WAKE UP", "17.30":"READ", "19:00":"BATH", "20:00":"EAT", "21:00":"SLEEP"}.
-                        Remember to make the time table of the agent as realistic and reasonable as possible and make sure that it follows the nature of the agent.
+                        Remember to make the time table of the agent as realistic and reasonable as possible and make sure that it follows the nature of the agent. Also ensure that the actions are the actions given in the prompt.
                         ''')
         
         # data = re.search(r'\{(.*?)\}', write_out).group(1)
         # print(data)
         pattern = r'\{(.*?)\}'
         data = '{' +re.findall(pattern, write_out)[0] + '}'
-        print('cow')
-        print(data)
-        final_shedule = {}
-        for i in data.split(','):
-            l = i.split(':')
-            final_shedule[l[0].strip()] = l[1].strip()[1:-1]
+        final_shedule = ast.literal_eval(data)
         self.person.schedule = final_shedule
 
     def change_schedule(self, reason):
         '''Changes the schedule of a person, because of another person's intervention(the summary will be given in as reason.)'''
         writer = LLM()
         write_out = writer.generate(f'''Using the base character of the AI, memory and factor that affect schedule, write the actions performed by the AI agents for a day.
-                        possible actions: {self.actions}
-                        base character: {self.person.base_character}
-                        relevant memory: {self.person.memory}
+                        previous schedule: {self.person.schedule}
                         Factor that affect schedule: {reason}
-                        Write the actions and the time of start of action in a dictionary format. The time for dictionary should start at 6 by waking up and end at around 22 by going to sleep.''' + 
+                        possible action pool: {self.actions}
+                        Change the schedule with the help of the above factor. Ensure that all the actions in the schedule comes from the given action pool. If the agent is meeting to somebody at any place, the agent have to first reach that place and then perform the action MEET half an hour later.''' + 
                         '''
                         Format: {"Start time for activity":"Name of activity"}
                         Example: {"6:00":"WAKE UP", "6:30":"BRUSH", "7:00":"EXCERCISE", "8:00":"DANCE", "9:00":"BATH", "10:00":"COOK", "14:30":"EAT", "15:00":"SLEEP", "17:00":"WAKE UP", "17.30":"READ", "19:00":"BATH", "20:00":"EAT", "21:00":"SLEEP"}.
-                        Remember to make the time table of the agent as realistic and reasonable as possible and make sure that it follows the nature of the agent. Also look at the reason and include that in the schedule.
-                        ''')
+                        Now carefully modify the schedule.''')
+        pattern = r'\{(.*?)\}'
+        data = '{' +re.findall(pattern, write_out)[0] + '}'
+        final_shedule = ast.literal_eval(data)
         
-        data = re.search(r'\{(.*?)\}', write_out).group(1)
-        final_shedule = {}
-        for i in data.split(','):
-            l = i.split(':')
-            final_shedule[l[0].strip()] = l[1].strip()[1:-1]
         self.person.schedule = final_shedule
 
 
