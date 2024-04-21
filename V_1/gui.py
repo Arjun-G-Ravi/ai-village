@@ -1,15 +1,63 @@
 import pygame
 import random
 import tasks
+from queue import PriorityQueue
 
 pygame.init()
+
+def h(start, end):
+    l = []
+    for i in end:
+        l.append(abs(i[0]-start[0]) + abs(i[1]-start[1]))
+    return min(l)
+
+def path(node, parent):
+    l = [node]
+    p = parent[node]
+    while p is not None:
+        l.append(p)
+        p = parent[p]
+    l.pop()
+    return list(l)
+
+def pathfinder(start,end,world):
+    open_queue = PriorityQueue()
+    cost = {start : 0}
+    open_queue.put((cost[start] + h(start,end), start))
+    closed = set()
+    open_set = {start}
+    parent = {start : None}
+    sprite = pygame.sprite.Sprite()
+    sprite.image = pygame.Surface((16,16))
+    sprite.image.fill("black")
+    while not open_queue.empty():
+        node = open_queue.get()[1]
+        open_set.remove(node)
+        if node in end:
+            return path(node, parent)
+        closed.add(node)
+        for i in ((0,1), (0,-1), (1,0), (-1,0)):
+            child = (node[0]+i[0], node[1]+i[1])
+            est = h(child, end)
+            sprite.rect = sprite.image.get_rect(topleft = (child[0]*16,child[1]*16))
+            sprite.mask = pygame.mask.from_surface(sprite.image)
+            if child not in closed and child not in open_set and not world.check_collision(sprite):
+                cost[child] = cost[node] + 1 
+                open_queue.put((cost[child] + est, child))
+                open_set.add(child)
+                parent[child] = node
+            elif child in open_set and cost[child] > cost[node] + 1:
+                open_queue.queue.remove((cost[child]+est, child))
+                cost[child] = cost[node] + 1
+                open_queue.put((cost[child]+est, child))
+                parent[child] = node
+    return []
 
 class Window:
     #game attributes
     DRAGGING = False
     #time attributes
     DT = 1
-    TIME = 0
     TIMER = 0
     
     def __init__(self):
@@ -20,8 +68,7 @@ class Window:
         #take window width and height
         self.WINDOW_WIDTH,self.WINDOW_HEIGHT = pygame.display.get_window_size()
         #instantiate the world
-        self.WORLD = World()
-        self.WORLD.set_texture(pygame.image.load(r"./Sprites/First_Temp.png").convert())
+        self.WORLD = World(r"./Sprites/First_Temp.png")
         
         self.FONT = pygame.font.SysFont("calibri", 16)
         #start the event loop
@@ -70,7 +117,7 @@ class Window:
                     self.WORLD.set_y(max(min(-posy,0),-self.WORLD.HEIGHT * self.WORLD.CELL_SIZE * scale + self.WINDOW_HEIGHT))
                     self.WORLD.set_scale(scale)
                     self.WORLD.scale_entities(scale)
-                        
+            
             #game updates
             self.update()
             #game rendering
@@ -78,24 +125,20 @@ class Window:
             #clock tick
             self.DT = self.CLOCK.tick(30)/1000
             self.TIMER += self.DT
-            if self.TIME != (self.TIMER//15)%48:
-                self.TIME = (self.TIMER//15)%48
-                #self.WORLD.time_step()
 
     def update(self):
-        self.WORLD.update()
+        if self.WORLD.TIME != (self.TIMER//15)%self.WORLD.MAX_TIME:
+            self.WORLD.TIME = (self.TIMER//15)%self.WORLD.MAX_TIME
+            self.WORLD.time_step()
+        self.WORLD.update(self.DT)
     
     def render(self):
         #render events
         self.SCREEN.fill("gray")
         self.WORLD.draw(self.SCREEN)
         
-        time = int(self.TIME//2)
-        if self.TIME%2==0:
-            time = str(time)+":00"
-        else:
-            time = str(time)+":30"
-        text = self.FONT.render(time, True, (0,255,0))
+        time = self.WORLD.get_time()
+        text = self.FONT.render(time, True, (255,0,0))
         self.SCREEN.blit(text, (0,0))
         
         pygame.display.flip()
@@ -119,16 +162,30 @@ class World:
     MAX_TIME = 48         # 24 * 2 (30 minute intervals)
     #important locations
     LOCATIONS = {
-        "House1" : ((25,29),(26,29)),
+        "House1" : {
+            "Entrance" : ((25,29),(26, 29)),
+            "Kitchen" : ((37, 11),(30,11),(31,11),(33,11)),
+            "Toilet" : ((27, 11),),
+            "Bed" : ((19, 11),),
+            "TV" : ((36, 20),(35, 20)),
+            "Bookshelf" : ((28, 19),),
+            "Seat" : ((34, 24),)
+        },
         "House2" : ((26,83),(27,83)),
         "House3" : ((145,34),(146,34)),
         "House4" : ((158,90),(159,90)),
         "Market" : ((93,69),(94,69),(93,39),(94,39),(113,54),(113,55),(73,54),(73,55))
     }
     
-    def __init__(self):
-        #setting locations that cannot be walked on
-        self.set_invalid([i for j in self.LOCATIONS for i in self.LOCATIONS[j]])
+    def __init__(self,path):
+        self.set_texture(path)
+        
+        #sprite mask
+        sprite = pygame.sprite.Sprite()
+        sprite.image = pygame.image.load(r'./Sprites/World_Mask.png').convert_alpha()
+        sprite.rect = sprite.image.get_rect(topleft = (self.X,self.Y))
+        sprite.mask = pygame.mask.from_surface(sprite.image)
+        self.SPRITE_GROUP = pygame.sprite.GroupSingle(sprite)
         
         #create list of entities in the environment
         self.init_entities()
@@ -147,25 +204,7 @@ class World:
             "19:00" : "EAT",
             "21:00" : "SLEEP",
         }
-        self.ENTITIES.append(Entity("John", r"./Sprites/Sample_Character.png",self.SCALE,schedule))
-    
-    def set_invalid(self, exceptions):
-        self.INVALID = [(i,0) for i in range(self.WIDTH)] + [(0,i) for i in range(self.HEIGHT)]                                 #top and left
-        self.INVALID += [(i,self.HEIGHT-1) for i in range(self.WIDTH)] + [(self.WIDTH-1,i) for i in range(self.HEIGHT)]         #bottom and right
-        self.INVALID += [(i,1) for i in range(1,self.WIDTH-1)] + [(1,i) for i in range(1,self.HEIGHT-1)]                        #top and left(2nd layer)
-        self.INVALID += [(i,self.HEIGHT-2) for i in range(1,self.WIDTH-1)] + [(self.WIDTH-2,i) for i in range(1,self.HEIGHT-1)] #bottom and right(2nd layer)
-        self.INVALID += [(i,10) for i in range(13,39)] + [(i,29) for i in range(13,39) if (i,29) not in exceptions]     #top and bottom(house1)
-        self.INVALID += [(13,i) for i in range(10,30)] + [(38,i) for i in range(10,30)]                                 #left and right(house1)
-        self.INVALID += [(i,59) for i in range(13,42)] + [(i,83) for i in range(13,42) if (i,83) not in exceptions]     #top and bottom(house2)
-        self.INVALID += [(13,i) for i in range(59,84)] + [(41,i) for i in range(59,84)]                                 #left and right(house2)
-        self.INVALID += [(i,19) for i in range(140,173)] + [(i,34) for i in range(140,173) if (i,34) not in exceptions] #top and bottom(house3)
-        self.INVALID += [(140,i) for i in range(19,35)] + [(172,i) for i in range(19,35)]                               #left and right(house3)
-        self.INVALID += [(i,68) for i in range(145,174)] + [(i,90) for i in range(145,174) if (i,90) not in exceptions] #top and bottom(house4)
-        self.INVALID += [(145,i) for i in range(68,91)] + [(173,i) for i in range(68,91)]                               #left and right(house4)
-        self.INVALID += [(i,39) for i in range(73,114) if (i,39) not in exceptions]                                    #top(market)
-        self.INVALID += [(i,69) for i in range(73,114) if (i,69) not in exceptions]                                    #bottom(market)
-        self.INVALID += [(73,i) for i in range(39,70) if (113,i) not in exceptions]                                    #left(market)
-        self.INVALID += [(113,i) for i in range(39,70) if (113,i) not in exceptions]                                   #right(market)
+        self.ENTITIES.append(Entity("John", r"./Sprites/Sample_Character.png",self.SCALE,schedule,self.LOCATIONS["House1"],self))
     
     def set_scale(self,scale):
         #update scale of world
@@ -199,24 +238,40 @@ class World:
         for entity in self.ENTITIES:
             entity.render(surface, self.X, self.Y, self.SCALE)
     
-    def set_texture(self, texture):
+    def set_texture(self, path):
+        texture = pygame.image.load(r"./Sprites/First_Temp.png").convert()
         #set the texture for the world
         self.TEXTURE = texture
         self.scale()
     
-    def update(self):
+    def update(self, dt):
         for entity in self.ENTITIES:
-            entity.update(self)
+            entity.update(dt,self)
     
     def time_step(self):
         for ent in self.ENTITIES:
             ent.ACTION_TIME = max(0,ent.ACTION_TIME-1)
+    
+    def check_collision(self, sprite):
+        if pygame.sprite.spritecollide(sprite,self.SPRITE_GROUP,False,pygame.sprite.collide_mask):
+            return True
+        return False
+    
+    def get_time(self):
+        time = int(self.TIME//2)
+        if self.TIME%2==0:
+            time = str(time)+":00"
+        else:
+            time = str(time)+":30"
+        return time
+    
 
 class Entity:
     #entity attributes
     NAME = ""
     OBJECT = None
-    X,Y = 496,384
+    X,Y = 32, 32
+    SPEED = 32
     #entity sprite attributes
     FACING = "S"
     SPRITE = {}
@@ -226,13 +281,26 @@ class Entity:
     with open('./actions.txt','r') as file:
             ACTIONS = file.read().split('\n')
     ACTION_TIME = 0
+    TASK = "SLEEP"
+    INTERACTABLE = {}
     
-    def __init__(self, name, path, scale, schedule):
+    def __init__(self, name, path, scale, schedule, house, world):
         self.NAME = name
         self.SCHEDULE = schedule
         self.PATH = list()
+        self.INTERACTABLE = house
+        #for mask
+        sprite = pygame.sprite.Sprite()
+        sprite.image = pygame.Surface((16*scale,16*scale))
+        sprite.image.fill("black")
+        sprite.rect = sprite.image.get_rect(topleft = (self.X,self.Y))
+        sprite.mask = pygame.mask.from_surface(sprite.image)
+        self.SPRITE_GROUP = pygame.sprite.GroupSingle(sprite)
+        #texture of character
         self.set_texture(path)
         self.scale_sprite(scale)
+        #initialise tasks
+        self.init_task("SLEEP", world)
     
     def set_texture(self, path):
         spritesheet = pygame.image.load(path).convert_alpha()
@@ -281,9 +349,66 @@ class Entity:
                 frame = pygame.transform.scale_by(frame,scale)
                 self.CURRENT_SPRITE.append(frame)
     
-    def update(self, world):
-        pass
+    def update_distance(self,distance,next_cell):
+        cell_pass = False
+        if self.FACING in ["N","S"]:
+            if distance >= abs((next_cell[1]*16)-self.Y):
+                distance -= abs((next_cell[1]*16)-self.Y)
+                self.Y = next_cell[1]*16
+                self.set_dir()
+                
+                cell_pass = True
+            else:
+                if self.FACING == "N":
+                    self.Y -= distance
+                else:
+                    self.Y += distance
+                distance = 0
+        else:
+            if distance >= abs((next_cell[0]*16)-self.X):
+                distance -= abs((next_cell[0]*16)-self.X)
+                self.X = next_cell[0]*16
+                self.set_dir()
+                cell_pass = True
+            else:
+                if self.FACING == "W":
+                    self.X -= distance
+                else:
+                    self.X += distance
+                distance = 0
+        return distance, cell_pass
+    
+    def update(self, dt, world):
+        #check for change in schedule
+        time = world.get_time()
+        if time in self.SCHEDULE.keys() and self.SCHEDULE[time] != self.TASK:
+            self.change_task(time,world)
+        if self.TASK == "SLEEP":
+            if self.PATH != []:
+                next_cell = self.PATH.pop()
+                distance = self.SPEED*dt
+                while distance>0:
+                    distance, passed = self.update_distance(distance,next_cell)
+                    if passed and self.PATH!=[]:
+                        next_cell = self.PATH.pop()
+                        self.scale_sprite(world.SCALE)
+                    elif self.PATH == []:
+                        if self.FACING == "N":
+                            self.Y -= 16
+                        elif self.FACING == "S":
+                            self.Y += 16
+                        elif self.FACING == "W":
+                            self.X -= 16
+                        else:
+                            self.X += 16
+                        self.STATE = "SLEEP"
+                        self.TASK = "IDLE"
+                        self.scale_sprite(world.SCALE)
+                if self.TASK == "SLEEP":
+                    self.PATH.append(next_cell)
+        #print(world.check_collision(self.SPRITE_GROUP.sprite))
         # print(world.SCALE)
+        pass
     
     def render(self, surface, x_offset, y_offset, scale):
         #renders the sprite to the screen
@@ -293,3 +418,33 @@ class Entity:
         else:
             surface.blit(self.CURRENT_SPRITE[self.FRAME//3], ((self.X * scale) + x_offset, (self.Y * scale) + y_offset - 16*scale))
             self.FRAME = (self.FRAME+1)%18
+    
+    def set_path(self,path):
+        self.PATH = path.copy()
+    
+    def change_task(self, time, world):
+        self.TASK = self.SCHEDULE[time]
+        self.init_task(self.TASK,world)
+    
+    def init_task(self,task,world):
+        if task == "SLEEP":
+            #getting ready for walking to bed
+            self.STATE = "WALK"
+            self.PATH = pathfinder((self.X//16,self.Y//16),self.INTERACTABLE["Bed"],world)
+            #setting facing direction
+            self.set_dir()
+            self.scale_sprite(world.SCALE)
+    
+    def set_dir(self):
+        loc = self.PATH.pop()
+        xdiff = (loc[0]*16)-self.X
+        ydiff = (loc[1]*16)-self.Y
+        self.PATH.append(loc)
+        if xdiff > 0:
+            self.FACING = "E"
+        elif xdiff < 0:
+            self.FACING = "W"
+        elif ydiff > 0:
+            self.FACING = "S"
+        else:
+            self.FACING = "N"

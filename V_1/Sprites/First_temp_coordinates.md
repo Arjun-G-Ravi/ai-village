@@ -1,7 +1,7 @@
 # Coordinates for different parts of house
 
 # Room: Top Left
-- Bed: 288, 160
+- Bed: 288, 176
 
 # Kitchen
 - Sink: 496, 160
