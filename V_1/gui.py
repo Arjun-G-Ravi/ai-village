@@ -1,6 +1,5 @@
 import pygame
 import random
-import tasks
 from queue import PriorityQueue
 
 pygame.init()
@@ -18,7 +17,7 @@ def path(node, parent):
         l.append(p)
         p = parent[p]
     l.pop()
-    return list(l)
+    return l
 
 def pathfinder(start,end,world):
     open_queue = PriorityQueue()
@@ -61,15 +60,17 @@ class Window:
     TIMER = 0
     
     def __init__(self):
+        #display info
+        self.DISPLAY_INFO = pygame.display.Info()
         #create window with fullscreen
-        self.SCREEN = pygame.display.set_mode((0,0),pygame.FULLSCREEN)
+        self.SCREEN = pygame.display.set_mode((self.DISPLAY_INFO.current_w,self.DISPLAY_INFO.current_h),pygame.NOFRAME)
+        pygame.display.set_caption("AI VILLAGE")
         #create pygame clock
         self.CLOCK = pygame.time.Clock()
         #take window width and height
         self.WINDOW_WIDTH,self.WINDOW_HEIGHT = pygame.display.get_window_size()
         #instantiate the world
         self.WORLD = World(r"./Sprites/First_Temp.png")
-        
         self.FONT = pygame.font.SysFont("calibri", 16)
         #start the event loop
         self.event_loop()
@@ -129,7 +130,6 @@ class Window:
     def update(self):
         if self.WORLD.TIME != (self.TIMER//15)%self.WORLD.MAX_TIME:
             self.WORLD.TIME = (self.TIMER//15)%self.WORLD.MAX_TIME
-            self.WORLD.time_step()
         self.WORLD.update(self.DT)
     
     def render(self):
@@ -138,7 +138,10 @@ class Window:
         self.WORLD.draw(self.SCREEN)
         
         time = self.WORLD.get_time()
-        text = self.FONT.render(time, True, (255,0,0))
+        text = self.FONT.render(time, True, (255,255,255))
+        text_surf = text.copy()
+        text_surf.fill((0,0,0))
+        self.SCREEN.blit(text_surf, (0,0))
         self.SCREEN.blit(text, (0,0))
         
         pygame.display.flip()
@@ -164,12 +167,14 @@ class World:
     LOCATIONS = {
         "House1" : {
             "Entrance" : ((25,29),(26, 29)),
-            "Kitchen" : ((37, 11),(30,11),(31,11),(33,11)),
-            "Toilet" : ((27, 11),),
-            "Bed" : ((19, 11),),
+            "Kitchen" : ((37, 10),(30,11),(31,10),(33,10)),
+            "Kitchen_Seat" : ((34,12),(34,13)),
+            "Toilet" : ((27, 10   ),),
+            "Bed" : ((17, 11),(17,18)),
             "TV" : ((36, 20),(35, 20)),
             "Bookshelf" : ((28, 19),),
-            "Seat" : ((34, 24),)
+            "Seat" : ((34, 24),),
+            "Seat_Dir" : {(34, 24):"S",(34,12):"E",(34,13):"E"}
         },
         "House2" : ((26,83),(27,83)),
         "House3" : ((145,34),(146,34)),
@@ -194,12 +199,11 @@ class World:
         #create the entities in the world
         schedule = {
             "6:00" : "WAKE UP",
-            "6:30" : "BRUSH",
-            "7:00" : "COOK",
+            "6:30" : "COOK",
             "7:30" : "EAT",
-            "8:00" : "GO TO WORK",
+            "16:00" : "GO TO WORK",
             "15:00" : "COME BACK HOME",
-            "16:00" : "READ",
+            "8:00" : "READ",
             "18:00" : "COOK",
             "19:00" : "EAT",
             "21:00" : "SLEEP",
@@ -248,10 +252,6 @@ class World:
         for entity in self.ENTITIES:
             entity.update(dt,self)
     
-    def time_step(self):
-        for ent in self.ENTITIES:
-            ent.ACTION_TIME = max(0,ent.ACTION_TIME-1)
-    
     def check_collision(self, sprite):
         if pygame.sprite.spritecollide(sprite,self.SPRITE_GROUP,False,pygame.sprite.collide_mask):
             return True
@@ -280,8 +280,10 @@ class Entity:
     #entity actions
     with open('./actions.txt','r') as file:
             ACTIONS = file.read().split('\n')
-    ACTION_TIME = 0
+    ACTION_DONE = False
+    ACTION_TIMER = 0
     TASK = "SLEEP"
+    TASK_INDEX = 0
     INTERACTABLE = {}
     
     def __init__(self, name, path, scale, schedule, house, world):
@@ -300,7 +302,7 @@ class Entity:
         self.set_texture(path)
         self.scale_sprite(scale)
         #initialise tasks
-        self.init_task("SLEEP", world)
+        self.init_task(world)
     
     def set_texture(self, path):
         spritesheet = pygame.image.load(path).convert_alpha()
@@ -355,8 +357,10 @@ class Entity:
             if distance >= abs((next_cell[1]*16)-self.Y):
                 distance -= abs((next_cell[1]*16)-self.Y)
                 self.Y = next_cell[1]*16
-                self.set_dir()
-                
+                if self.PATH!=[]:
+                    self.set_dir()
+                else:
+                    distance = 0
                 cell_pass = True
             else:
                 if self.FACING == "N":
@@ -368,7 +372,10 @@ class Entity:
             if distance >= abs((next_cell[0]*16)-self.X):
                 distance -= abs((next_cell[0]*16)-self.X)
                 self.X = next_cell[0]*16
-                self.set_dir()
+                if self.PATH!=[]:
+                    self.set_dir()
+                else:
+                    distance = 0
                 cell_pass = True
             else:
                 if self.FACING == "W":
@@ -386,26 +393,108 @@ class Entity:
         if self.TASK == "SLEEP":
             if self.PATH != []:
                 next_cell = self.PATH.pop()
+                self.PATH.append(next_cell)
                 distance = self.SPEED*dt
                 while distance>0:
                     distance, passed = self.update_distance(distance,next_cell)
                     if passed and self.PATH!=[]:
                         next_cell = self.PATH.pop()
                         self.scale_sprite(world.SCALE)
-                    elif self.PATH == []:
-                        if self.FACING == "N":
-                            self.Y -= 16
-                        elif self.FACING == "S":
-                            self.Y += 16
-                        elif self.FACING == "W":
-                            self.X -= 16
-                        else:
-                            self.X += 16
+                    elif not passed:
+                        self.PATH.append(next_cell)
+                    elif self.PATH == [] and (self.X//16,self.Y//16) in self.INTERACTABLE["Bed"]:
                         self.STATE = "SLEEP"
+                        self.FRAME = 0
                         self.TASK = "IDLE"
                         self.scale_sprite(world.SCALE)
                 if self.TASK == "SLEEP":
                     self.PATH.append(next_cell)
+        elif self.TASK == "WAKE UP":
+            if self.PATH != []:
+                next_cell = self.PATH.pop()
+                self.PATH.append(next_cell)
+                distance = self.SPEED*dt
+                while distance>0:
+                    distance, passed = self.update_distance(distance,next_cell)
+                    if passed and self.PATH!=[]:
+                        next_cell = self.PATH.pop()
+                        self.scale_sprite(world.SCALE)
+                    elif not passed:
+                        self.PATH.append(next_cell)
+                    elif self.PATH == [] and (self.X//16,self.Y//16) in self.INTERACTABLE["Toilet"]:
+                        self.STATE = "IDLE"
+                        self.FRAME = 0
+                        self.TASK = "IDLE"
+                        self.scale_sprite(world.SCALE)
+                if self.TASK == "WAKE UP":
+                    self.PATH.append(next_cell)
+        elif self.TASK == "COOK":
+            if self.STATE == "IDLE":
+                self.ACTION_TIMER -= 1
+                if self.ACTION_TIMER == 0:
+                    self.TASK_INDEX = (self.TASK_INDEX+1)%4
+                    self.init_task(world)
+            else:
+                if self.PATH != []:
+                    next_cell = self.PATH.pop()
+                    self.PATH.append(next_cell)
+                    distance = self.SPEED*dt
+                    while distance>0:
+                        distance, passed = self.update_distance(distance,next_cell)
+                        if passed and self.PATH!=[]:
+                            next_cell = self.PATH.pop()
+                            self.scale_sprite(world.SCALE)
+                        elif not passed:
+                            self.PATH.append(next_cell)
+                        elif self.PATH == [] and (self.X//16,self.Y//16) in self.INTERACTABLE["Kitchen"]:
+                            self.STATE = "IDLE"
+                            self.FRAME = 0
+                            if self.TASK_INDEX == 1:
+                                self.FACING = "W"
+                            self.scale_sprite(world.SCALE)
+        elif self.TASK == "EAT":
+            if self.PATH != []:
+                next_cell = self.PATH.pop()
+                self.PATH.append(next_cell)
+                distance = self.SPEED*dt
+                while distance>0:
+                    distance, passed = self.update_distance(distance,next_cell)
+                    if passed and self.PATH!=[]:
+                        next_cell = self.PATH.pop()
+                        self.scale_sprite(world.SCALE)
+                    elif not passed:
+                        self.PATH.append(next_cell)
+                    elif self.PATH == [] and (self.X//16,self.Y//16) in self.INTERACTABLE["Kitchen_Seat"]:
+                        self.STATE = "SIT"
+                        self.FRAME = 0
+                        self.TASK = "IDLE"
+                        self.FACING = self.INTERACTABLE["Seat_Dir"][(self.X//16,self.Y//16)]
+                        self.scale_sprite(world.SCALE)
+                if self.TASK == "EAT":
+                    self.PATH.append(next_cell)
+        elif self.TASK == "READ":
+            if self.STATE == "IDLE":
+                self.ACTION_TIMER -= 1
+                if self.ACTION_TIMER == 0:
+                    self.STATE = "READ"
+                    self.FRAME = 0
+                    self.TASK = "IDLE"
+            else:
+                if self.PATH != []:
+                    next_cell = self.PATH.pop()
+                    self.PATH.append(next_cell)
+                    distance = self.SPEED*dt
+                    while distance>0:
+                        distance, passed = self.update_distance(distance,next_cell)
+                        if passed and self.PATH!=[]:
+                            next_cell = self.PATH.pop()
+                            self.scale_sprite(world.SCALE)
+                        elif not passed:
+                            self.PATH.append(next_cell)
+                        elif self.PATH == [] and (self.X//16,self.Y//16) in self.INTERACTABLE["Bookshelf"]:
+                            self.STATE = "IDLE"
+                            self.FRAME = 0
+                            self.scale_sprite(world.SCALE)
         #print(world.check_collision(self.SPRITE_GROUP.sprite))
         # print(world.SCALE)
         pass
@@ -424,13 +513,50 @@ class Entity:
     
     def change_task(self, time, world):
         self.TASK = self.SCHEDULE[time]
-        self.init_task(self.TASK,world)
+        if self.TASK in ["COOK"]:
+            self.TASK_INDEX = 0
+        self.init_task(world)
     
-    def init_task(self,task,world):
-        if task == "SLEEP":
+    def init_task(self,world):
+        if self.TASK == "SLEEP" and (self.X//16,self.Y//16) not in self.INTERACTABLE["Bed"]:
             #getting ready for walking to bed
             self.STATE = "WALK"
+            self.FRAME = 0
             self.PATH = pathfinder((self.X//16,self.Y//16),self.INTERACTABLE["Bed"],world)
+            #setting facing direction
+            self.set_dir()
+            self.scale_sprite(world.SCALE)
+        elif self.TASK == "WAKE UP" and (self.X//16,self.Y//16) not in self.INTERACTABLE["Toilet"]:
+            #get path to a tiolet sink
+            self.STATE = "WALK"
+            self.FRAME = 0
+            self.PATH = pathfinder((self.X//16,self.Y//16),self.INTERACTABLE["Toilet"],world)
+            #setting facing direction
+            self.set_dir()
+            self.scale_sprite(world.SCALE)
+        elif self.TASK == "COOK":
+            #get path to a kitchen 
+            self.STATE = "WALK"
+            self.FRAME = 0
+            self.ACTION_TIMER = 60
+            self.PATH = pathfinder((self.X//16,self.Y//16),(self.INTERACTABLE["Kitchen"][self.TASK_INDEX],),world)
+            #setting facing direction
+            self.set_dir()
+            self.scale_sprite(world.SCALE)
+        elif self.TASK == "EAT" and (self.X//16,self.Y//16) not in self.INTERACTABLE["Kitchen_Seat"]:
+            #get path to chair
+            self.STATE = "WALK"
+            self.FRAME = 0
+            self.PATH = pathfinder((self.X//16,self.Y//16),self.INTERACTABLE["Kitchen_Seat"],world)
+            #setting facing direction
+            self.set_dir()
+            self.scale_sprite(world.SCALE)
+        elif self.TASK == "READ" and (self.X//16,self.Y//16) not in self.INTERACTABLE["Bookshelf"]:
+            #get path to bookshelf
+            self.STATE = "WALK"
+            self.FRAME = 0
+            self.ACTION_TIMER = 60
+            self.PATH = pathfinder((self.X//16,self.Y//16),self.INTERACTABLE["Bookshelf"],world)
             #setting facing direction
             self.set_dir()
             self.scale_sprite(world.SCALE)
