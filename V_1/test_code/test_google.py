@@ -1,25 +1,28 @@
-# import google.generativeai as genai
-# genai.configure(api_key='AIzaSyDA6pSGmfSJdpQw0L1Re-y8AEnm4NbCxaw')
+class LLM:
+    def __init__(self):
+        import google.generativeai as genai
+        genai.configure(api_key='AIzaSyDA6pSGmfSJdpQw0L1Re-y8AEnm4NbCxaw') # API Key
 
-# safety_settings = [
-#   {
-#     "category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"},
-#   {
-#     "category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_NONE"},
-#   {
-#     "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_NONE"},
-#   {
-#     "category": "HARM_CATEGORY_DANGEROUS_CONTENT","threshold": "BLOCK_NONE"}]
+        safety_settings = [
+        {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"},
+        {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_NONE"},
+        {"category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_NONE"},
+        {"category": "HARM_CATEGORY_DANGEROUS_CONTENT","threshold": "BLOCK_NONE"}]
 
-# model = genai.GenerativeModel('gemini-pro')
+        self.model = genai.GenerativeModel('gemini-pro', safety_settings)
+        self.generation_config=genai.types.GenerationConfig(candidate_count=1, max_output_tokens=1000, temperature=0.3, top_p=.9)
+    
+    def generate(self, inp):
+        '''Generates output using Google API, given the input.'''
+        try:
+            response = self.model.generate_content(inp, generation_config=self.generation_config)
+        except:
+            return 'Failed to fetch data from API'
+        # print(response.text)
+        print(inp)
+        print(response.text)
 
-# # test = "You are John, an AI agent in a virtual world. John is always grumpy and engry at everyone, everytime. You are asked by Pam, John's daughter about the importance of cow in nature. How will John respond? Your answer should be short."
-# for _ in range(10):
-#     response = model.generate_content("How to open a closed car?", generation_config=genai.types.GenerationConfig(
-#         # Only one candidate for now.
-#         candidate_count=1,
-#         max_output_tokens=1500,
-#         temperature=0.7))
-#     # print(response.prompt_feedback)
-#     print(response.text)
-    # print('\n\n\n')
+        return response.text
+
+l = LLM()
+l.generate('How can i kill a mosquito?')
