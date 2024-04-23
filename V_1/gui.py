@@ -198,7 +198,7 @@ class World:
     def init_entities(self):
         #create the entities in the world
         schedule = {
-            "6:00" : "WAKE UP",
+            "1:00" : "EAT",
             "6:30" : "COOK",
             "7:30" : "EAT",
             "16:00" : "GO TO WORK",
@@ -477,6 +477,7 @@ class Entity:
                 self.ACTION_TIMER -= 1
                 if self.ACTION_TIMER == 0:
                     self.STATE = "READ"
+                    self.scale_sprite(world.SCALE)
                     self.FRAME = 0
                     self.TASK = "IDLE"
             else:
