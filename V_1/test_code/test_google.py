@@ -1,4 +1,4 @@
-class LLM:
+class LLM_gemini:
     def __init__(self):
         import google.generativeai as genai
         genai.configure(api_key='AIzaSyDA6pSGmfSJdpQw0L1Re-y8AEnm4NbCxaw') # API Key
@@ -15,14 +15,8 @@ class LLM:
     def generate(self, inp):
         '''Generates output using Google API, given the input.'''
         try:
-            response = self.model.generate_content(inp, generation_config=self.generation_config)
+            response = self.model.generate_content(inp+"Answer in character in two sentences.", generation_config=self.generation_config)
         except:
             return 'Failed to fetch data from API'
         # print(response.text)
-        print(inp)
-        print(response.text)
-
         return response.text
-
-l = LLM()
-l.generate('How can i kill a mosquito?')

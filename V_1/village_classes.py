@@ -2,30 +2,20 @@ import re
 import random
 import threading
 import ast
-# We are using Gemini model by Google
+
 
 class LLM:
     def __init__(self):
-        import google.generativeai as genai
-        genai.configure(api_key='AIzaSyDA6pSGmfSJdpQw0L1Re-y8AEnm4NbCxaw') # API Key
+        from groq import Groq
+        self.client = Groq(api_key='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')
 
-        safety_settings = [
-        {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"},
-        {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_NONE"},
-        {"category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_NONE"},
-        {"category": "HARM_CATEGORY_DANGEROUS_CONTENT","threshold": "BLOCK_NONE"}]
-
-        self.model = genai.GenerativeModel('gemini-pro', safety_settings)
-        self.generation_config=genai.types.GenerationConfig(candidate_count=1, max_output_tokens=1000, temperature=0.3, top_p=.9)
-    
     def generate(self, inp):
         '''Generates output using Google API, given the input.'''
-        try:
-            response = self.model.generate_content(inp+"Answer in character in two sentences.", generation_config=self.generation_config)
-        except:
-            return 'Failed to fetch data from API'
-        # print(response.text)
-        return response.text
+        chat_completion = self.client.chat.completions.create(
+            messages=[{"role": "user","content": f"{inp}"}],
+            model="llama3-70b-8192",
+            temperature=.2)
+        return chat_completion.choices[0].message.content
 
 class Person:
     def __init__(self, name, position, base_character, energy, villagers):
@@ -132,7 +122,8 @@ class ScheduleMaker:
                         '''
                         Format: {"Start time for activity":"Name of activity"}
                         Example: {"6:00":"WAKE UP", "6:30":"BRUSH", "7:00":"EXCERCISE", "8:00":"DANCE", "9:00":"BATH", "10:00":"COOK", "14:30":"EAT", "15:00":"SLEEP", "17:00":"WAKE UP", "17.30":"READ", "19:00":"BATH", "20:00":"EAT", "21:00":"SLEEP"}.
-                        Remember to make the time table of the agent as realistic and reasonable as possible and make sure that it follows the nature of the agent. Also ensure that the actions are the actions given in the prompt.
+                        Remember to make the time table of the agent as realistic and reasonable as possible and make sure that it follows the nature of the agent.
+                        Ensure that all actions mentioned in the schedule should come from the given list of actions.
                         ''')
         
         # data = re.search(r'\{(.*?)\}', write_out).group(1)
@@ -165,21 +156,23 @@ if __name__ == '__main__':
 
     # # Testing conversation AI
     p1 = Person('Tom', (0,0), 'Tom is an introvert and a shy person who likes to talk about cows.', 1, ['Joy', 'Tim', 'John', 'Terry'])
-    # p2 = Person('Joy', (0,0), 'Joy is an extrovert who loves to create conversation and interact with people.', 1, ['Tom', 'Tim', 'John', 'Terry'])
-    # print(p1)
-    # conv = ConversationAI()
-    # conv.create_thread_and_perform_conversation(p1, p2)
-    # print(p1)
+    p2 = Person('Joy', (0,0), 'Joy hates talking to people. She often curses at people and is always angry.', 1, ['Tom', 'Tim', 'John', 'Terry'])
+    print(p1)
+    conv = ConversationAI()
+    conv.create_thread_and_perform_conversation(p1, p2, display=True)
+    print(p1)
 
     # Testing scheduler
-    sc = ScheduleMaker(p1)
-    sc.change_schedule('Tom and Jane decided to meet in the market at time 15.')
-    print(p1.schedule)
-    print()
-    sc.create_new_schedule() 
-    print(p1.schedule)
+    # p1 = Person('Tom', (0,0), 'Tom is an introvert and a shy person who loves cows.', 1, ['Joy', 'Tim', 'John', 'Terry'])
+    # sc = ScheduleMaker(p1)
+    # sc.create_new_schedule() 
+    # print(p1.schedule)
+    # print()
+    # sc.change_schedule('Tom and Jane decided to meet in the market at time 15.')
+    # print(p1.schedule)
 
     # Test llm text generation
+    # llm = LLM()
     # print(llm.generate('''You are John, a twelve year old boy who thinks that he are a super cool assasin.You always talk in a shady and suspesious manner, even if there isnt one.
     #                    As he was walking home from school, he saw a cow killing the mayor of the town. The cow also gave him a scary look and threatened him that is he tell anybody of the
     #                    incident, then the cow will stomp him to death. Even the slightest clue and John is done. The cow even mooed at him. This scared the life out of John. 
