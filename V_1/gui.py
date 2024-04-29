@@ -174,7 +174,7 @@ class World:
             "TV" : ((36, 20),(35, 20)),
             "Bookshelf" : ((28, 19),),
             "Seat" : ((34, 24),),
-            "Seat_Dir" : {(34, 24):"S",(34,12):"E",(34,13):"E"}
+            "Seat_Dir" : {(34, 24):"S",(34,12):"E",(34,13):"E",(36, 20):"N",(35, 20):"N"}
         },
         "House2" : ((26,83),(27,83)),
         "House3" : ((145,34),(146,34)),
@@ -198,12 +198,14 @@ class World:
     def init_entities(self):
         #create the entities in the world
         schedule = {
-            "1:00" : "EAT",
+            "5:00" : "WAKE UP",
+            "5:30" : "WATCH TV",
             "6:30" : "COOK",
             "7:30" : "EAT",
-            "16:00" : "GO TO WORK",
+            "8:00" : "PLAY VIDEO GAMES",
+            "11:00" : "GO TO WORK",
             "15:00" : "COME BACK HOME",
-            "8:00" : "READ",
+            "16:00" : "READ",
             "18:00" : "COOK",
             "19:00" : "EAT",
             "21:00" : "SLEEP",
@@ -496,6 +498,26 @@ class Entity:
                             self.STATE = "IDLE"
                             self.FRAME = 0
                             self.scale_sprite(world.SCALE)
+        elif self.TASK in ["WATCH TV","PLAY VIDEO GAMES"]:
+            if self.PATH != []:
+                next_cell = self.PATH.pop()
+                self.PATH.append(next_cell)
+                distance = self.SPEED*dt
+                while distance>0:
+                    distance, passed = self.update_distance(distance,next_cell)
+                    if passed and self.PATH!=[]:
+                        next_cell = self.PATH.pop()
+                        self.scale_sprite(world.SCALE)
+                    elif not passed:
+                        self.PATH.append(next_cell)
+                    elif self.PATH == [] and (self.X//16,self.Y//16) in self.INTERACTABLE["TV"]:
+                        self.STATE = "IDLE"
+                        self.FRAME = 0
+                        self.TASK = "IDLE"
+                        self.FACING = self.INTERACTABLE["Seat_Dir"][(self.X//16,self.Y//16)]
+                        self.scale_sprite(world.SCALE)
+                if self.TASK in ["WATCH TV","PLAY VIDEO GAMES"]:
+                    self.PATH.append(next_cell)
         #print(world.check_collision(self.SPRITE_GROUP.sprite))
         # print(world.SCALE)
         pass
@@ -558,6 +580,14 @@ class Entity:
             self.FRAME = 0
             self.ACTION_TIMER = 60
             self.PATH = pathfinder((self.X//16,self.Y//16),self.INTERACTABLE["Bookshelf"],world)
+            #setting facing direction
+            self.set_dir()
+            self.scale_sprite(world.SCALE)
+        elif self.TASK in ["WATCH TV","PLAY VIDEO GAMES"] and (self.X//16,self.Y//16) not in self.INTERACTABLE["TV"]:
+            #get path to chair
+            self.STATE = "WALK"
+            self.FRAME = 0
+            self.PATH = pathfinder((self.X//16,self.Y//16),self.INTERACTABLE["TV"],world)
             #setting facing direction
             self.set_dir()
             self.scale_sprite(world.SCALE)
