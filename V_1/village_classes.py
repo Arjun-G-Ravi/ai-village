@@ -2,25 +2,26 @@ import re
 import random
 import threading
 import ast
-
+from groq import Groq
 
 class LLM:
-    def __init__(self):
-        from groq import Groq
+    def __init__(self, temperature = 0.2):
+        self.temperature = temperature
         self.client = Groq(api_key='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')
 
     def generate(self, inp):
         '''Generates output using Google API, given the input.'''
         chat_completion = self.client.chat.completions.create(
             messages=[{"role": "user","content": f"{inp}"}],
-            model="llama3-70b-8192",
-            temperature=.2)
+            model="llama3-8b-8192",
+            # All models: llama3-8b-8192 llama3-70b-8192 gemma-7b-it mixtral-8x7b-32768
+            temperature = self.temperature)
         return chat_completion.choices[0].message.content
     
-    
+
 
 class Person:
-    def __init__(self, name, position, base_character, energy, villagers):
+    def __init__(self, name, base_character, villagers,energy = 1, position = (0,0)):
         self.name = name
         self.position = position
         self.base_character = base_character
@@ -44,6 +45,7 @@ class Person:
     Relationship: {self.relationship}
     Memory: {self.memory}'''
     
+
   
 class ConversationAI:
     def __init__(self):
@@ -115,21 +117,18 @@ class ScheduleMaker:
     
     def create_new_schedule(self):
         '''Adds the shedule to shedule method of the Person object'''
-        writer = LLM()
+        writer = LLM(temperature=0.4)
         write_out = writer.generate(f'''Using the base character of the AI and memory, write the actions performed by the AI agents in a day.
                         possible actions: {self.actions}
                         base character: {self.person.base_character}
                         relevant memory: {self.person.memory}
-                        Write the actions and the time of start of action in a dictionary format. The time for dictionary should start at 6:00 by waking up and end at around 22:00 by going to sleep.''' + 
+                        Write the actions and the time of start of action in a dictionary format. The time for dictionary should start at anywhere between 5:00 and 9:00 by waking up and end between 20:00 and 22:00 by going to sleep.''' + 
                         '''
                         Format: {"Start time for activity":"Name of activity"}
                         Example: {"6:00":"WAKE UP", "6:30":"BRUSH", "7:00":"EXCERCISE", "8:00":"DANCE", "9:00":"BATH", "10:00":"COOK", "14:30":"EAT", "15:00":"SLEEP", "17:00":"WAKE UP", "17.30":"READ", "19:00":"BATH", "20:00":"EAT", "21:00":"SLEEP"}.
-                        Remember to make the time table of the agent as realistic and reasonable as possible and make sure that it follows the nature of the agent.
+                        Remember to make the time table of the agent as realistic and reasonable as possible and make sure that it follows the nature of the agent. The time block should ideally be a integer time or integer-and half time.
                         Ensure that all actions mentioned in the schedule should come from the given list of actions.
                         ''')
-        
-        # data = re.search(r'\{(.*?)\}', write_out).group(1)
-        # print(data)
         pattern = r'\{(.*?)\}'
         data = '{' +re.findall(pattern, write_out)[0] + '}'
         final_shedule = ast.literal_eval(data)
@@ -142,7 +141,9 @@ class ScheduleMaker:
                         previous schedule: {self.person.schedule}
                         Factor that affect schedule: {reason}
                         possible action pool: {self.actions}
-                        Change the schedule with the help of the above factor. Ensure that all the actions in the schedule comes from the given action pool. If the agent is meeting to somebody at any place, the agent have to first reach that place and then perform the action MEET half an hour later.''' + 
+                        Change the schedule with the help of the above factor. Ensure that all the actions in the schedule comes from the given action pool. The time block should ideally be a integer time or integer-and half time.
+                        If the agent is meeting to somebody at any place, the agent have to first reach that place(takes an hour) and then perform the action MEET for atleast an hour.
+                        If the agent wants to sleep at any time, go to sleep. Sleep for atleast two hours.''' + 
                         '''
                         Format: {"Start time for activity":"Name of activity"}
                         Example: {"6:00":"WAKE UP", "6:30":"BRUSH", "7:00":"EXCERCISE", "8:00":"DANCE", "9:00":"BATH", "10:00":"COOK", "14:30":"EAT", "15:00":"SLEEP", "17:00":"WAKE UP", "17.30":"READ", "19:00":"BATH", "20:00":"EAT", "21:00":"SLEEP"}.
@@ -150,22 +151,24 @@ class ScheduleMaker:
         pattern = r'\{(.*?)\}'
         data = '{' +re.findall(pattern, write_out)[0] + '}'
         final_shedule = ast.literal_eval(data)
-        
         self.person.schedule = final_shedule
 
 
 class CreatePerson:
+    '''Uses AI to create the character and behaviour of a person.'''
     def __init__(self, ):
-        self.llm = LLM()
+        self.llm = LLM(temperature=0.3)
 
     def write_new_character(self, name, character = False):
-        if character: out = self.llm.generate(f'''Write the character of a person called {name} in 5 sentences. 
-The character should follow these behavious {character}. Also ensure that the text should be output in the following format:
-<Name>: < all five Behaviours>.
-
-Dont answer anything else:''')
-        else: out = self.llm.generate(f'''Write the character of a person called {name} in 5 sentences.Also ensure that the text should be output in the following format:
-<Name>: < all five Behaviours>.''')
+        if character: out = self.llm.generate(f'''Write 5 character of a person called {name} as words or phrases separated by comma. 
+The character should follow these behaviours {character}. Also ensure that the text should be output in the following format:
+<Name>: < 5 characters>. 
+Dont answer anything else.''')
+            
+        else: out = self.llm.generate(f'''Write 5 character of a person called {name} as words or phrases separated by comma. 
+Also ensure that the text should be output in the following format:
+<Name>: < 5 characters>. 
+Dont answer anything else.''')
         
         with open('generated_base_characters.txt', 'a') as f:
             f.write(out + '|\n')
@@ -174,46 +177,65 @@ Dont answer anything else:''')
         with open('generated_base_characters.txt', 'w') as f:
             f.write('')
 
+    def person_list(self):
+        with open('generated_base_characters.txt', 'r') as f:
+            person_list = f.read().split('|\n')
+        persons = {}
+        for person in person_list:
+            if person:
+                new = person.split(':')
+                persons[new[0]] = new[1]
+        return persons
 
+def create_new_person(name, char_dict):
+    return Person(name, char_dict[name], {k:'' for k,v in char_dict.items()})
 
+  
 
 if __name__ == '__main__':
 
     # Test creating character behaviour by AI
     P =CreatePerson()
     P.clear()
+    P.write_new_character('John', 'super funny and extrovert')
+    P.write_new_character('Terry', 'introvert who loves marvel movies')
     # P.write_new_character('Tom', 'lazy')
-    # P.write_new_character('John', 'hyperactive')
-    # P.write_new_character('Terry', 'smart')
     # P.write_new_character('Lynn', 'super strong and atlethic')
     # P.write_new_character('Tim', 'loves cows')
-    P.write_new_character('Barry')
+    char_dict = P.person_list()
+
+    p1 = create_new_person('John', char_dict)
+    p2 = create_new_person('Terry', char_dict)
 
 
-
-
-
-    # # Testing conversation AI
-    # p1 = Person('Tom', (0,0), 'Tom is an introvert and a shy person who likes to talk about cows.', 1, ['Joy', 'Tim', 'John', 'Terry'])
-    # p2 = Person('Joy', (0,0), 'Joy hates talking to people. She often curses at people and is always angry.', 1, ['Tom', 'Tim', 'John', 'Terry'])
+    # Testing conversation AI
     # print(p1)
     # conv = ConversationAI()
-    # conv.create_thread_and_perform_conversation(p1, p2, display=True)
+    # conv.create_thread_and_perform_conversation(p1, p2, display=False)
     # print(p1)
 
-    # Testing scheduler
-    # p1 = Person('Tom', (0,0), 'Tom is an introvert and a shy person who loves cows.', 1, ['Joy', 'Tim', 'John', 'Terry'])
+    # # Testing scheduler and schedule changer AI
     # sc = ScheduleMaker(p1)
     # sc.create_new_schedule() 
     # print(p1.schedule)
     # print()
-    # sc.change_schedule('Tom and Jane decided to meet in the market at time 15.')
+    # sc.change_schedule('Tom is low on energy and want to sleep at 15.')
     # print(p1.schedule)
 
-    # Test llm text generation
-    # llm = LLM()
+
+    # # Test llm text generation
+    # llm = LLM(temperature=1)
     # print(llm.generate('''You are John, a twelve year old boy who thinks that he are a super cool assasin.You always talk in a shady and suspesious manner, even if there isnt one.
     #                    As he was walking home from school, he saw a cow killing the mayor of the town. The cow also gave him a scary look and threatened him that is he tell anybody of the
     #                    incident, then the cow will stomp him to death. Even the slightest clue and John is done. The cow even mooed at him. This scared the life out of John. 
     #                    John doesn't is so scared that he is willing to lie about never seeing the incident. Later, his brother asks if hehas seen anything about the murder of the mayor?
     #                    Will John tell the truth or will he lie to his brother?'''))
+    # print()
+    # llm = LLM(temperature=0)
+    # print(llm.generate('''You are John, a twelve year old boy who thinks that he are a super cool assasin.You always talk in a shady and suspesious manner, even if there isnt one.
+    #                    As he was walking home from school, he saw a cow killing the mayor of the town. The cow also gave him a scary look and threatened him that is he tell anybody of the
+    #                    incident, then the cow will stomp him to death. Even the slightest clue and John is done. The cow even mooed at him. This scared the life out of John. 
+    #                    John doesn't is so scared that he is willing to lie about never seeing the incident. Later, his brother asks if hehas seen anything about the murder of the mayor?
+    #                    Will John tell the truth or will he lie to his brother?'''))
+
+    pass
