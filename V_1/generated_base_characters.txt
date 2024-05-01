@@ -1,2 +1,2 @@
-John: Outgoing, Sarcastic, Energetic, Jovial, Flamboyant.|
-Terry: Nerdy, introverted, Marvel-obsessed, quiet, reserved.|
+John: Goofy, Outgoing, Jovial, Energetic, Loud|
+Terry: Quiet, Marvelous, Bookworm, Nerd, Geek.|

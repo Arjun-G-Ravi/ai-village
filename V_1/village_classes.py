@@ -136,7 +136,7 @@ class ScheduleMaker:
 
     def change_schedule(self, reason):
         '''Changes the schedule of a person, because of another person's intervention(the summary will be given in as reason.)'''
-        writer = LLM()
+        writer = LLM(temperature=0.2)
         write_out = writer.generate(f'''Using the base character of the AI, memory and factor that affect schedule, write the actions performed by the AI agents for a day.
                         previous schedule: {self.person.schedule}
                         Factor that affect schedule: {reason}
@@ -157,7 +157,7 @@ class ScheduleMaker:
 class CreatePerson:
     '''Uses AI to create the character and behaviour of a person.'''
     def __init__(self, ):
-        self.llm = LLM(temperature=0.3)
+        self.llm = LLM(temperature=0.5)
 
     def write_new_character(self, name, character = False):
         if character: out = self.llm.generate(f'''Write 5 character of a person called {name} as words or phrases separated by comma. 
@@ -187,6 +187,8 @@ Dont answer anything else.''')
                 persons[new[0]] = new[1]
         return persons
 
+# Global functions
+
 def create_new_person(name, char_dict):
     return Person(name, char_dict[name], {k:'' for k,v in char_dict.items()})
 
@@ -209,10 +211,10 @@ if __name__ == '__main__':
 
 
     # Testing conversation AI
-    # print(p1)
-    # conv = ConversationAI()
-    # conv.create_thread_and_perform_conversation(p1, p2, display=False)
-    # print(p1)
+    print(p1)
+    conv = ConversationAI()
+    conv.create_thread_and_perform_conversation(p1, p2, display=True)
+    print(p1)
 
     # # Testing scheduler and schedule changer AI
     # sc = ScheduleMaker(p1)
