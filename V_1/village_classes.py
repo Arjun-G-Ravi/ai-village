@@ -16,6 +16,8 @@ class LLM:
             model="llama3-70b-8192",
             temperature=.2)
         return chat_completion.choices[0].message.content
+    
+    
 
 class Person:
     def __init__(self, name, position, base_character, energy, villagers):
@@ -152,15 +154,52 @@ class ScheduleMaker:
         self.person.schedule = final_shedule
 
 
+class CreatePerson:
+    def __init__(self, ):
+        self.llm = LLM()
+
+    def write_new_character(self, name, character = False):
+        if character: out = self.llm.generate(f'''Write the character of a person called {name} in 5 sentences. 
+The character should follow these behavious {character}. Also ensure that the text should be output in the following format:
+<Name>: < all five Behaviours>.
+
+Dont answer anything else:''')
+        else: out = self.llm.generate(f'''Write the character of a person called {name} in 5 sentences.Also ensure that the text should be output in the following format:
+<Name>: < all five Behaviours>.''')
+        
+        with open('generated_base_characters.txt', 'a') as f:
+            f.write(out + '|\n')
+
+    def clear(self):
+        with open('generated_base_characters.txt', 'w') as f:
+            f.write('')
+
+
+
+
 if __name__ == '__main__':
 
+    # Test creating character behaviour by AI
+    P =CreatePerson()
+    P.clear()
+    # P.write_new_character('Tom', 'lazy')
+    # P.write_new_character('John', 'hyperactive')
+    # P.write_new_character('Terry', 'smart')
+    # P.write_new_character('Lynn', 'super strong and atlethic')
+    # P.write_new_character('Tim', 'loves cows')
+    P.write_new_character('Barry')
+
+
+
+
+
     # # Testing conversation AI
-    p1 = Person('Tom', (0,0), 'Tom is an introvert and a shy person who likes to talk about cows.', 1, ['Joy', 'Tim', 'John', 'Terry'])
-    p2 = Person('Joy', (0,0), 'Joy hates talking to people. She often curses at people and is always angry.', 1, ['Tom', 'Tim', 'John', 'Terry'])
-    print(p1)
-    conv = ConversationAI()
-    conv.create_thread_and_perform_conversation(p1, p2, display=True)
-    print(p1)
+    # p1 = Person('Tom', (0,0), 'Tom is an introvert and a shy person who likes to talk about cows.', 1, ['Joy', 'Tim', 'John', 'Terry'])
+    # p2 = Person('Joy', (0,0), 'Joy hates talking to people. She often curses at people and is always angry.', 1, ['Tom', 'Tim', 'John', 'Terry'])
+    # print(p1)
+    # conv = ConversationAI()
+    # conv.create_thread_and_perform_conversation(p1, p2, display=True)
+    # print(p1)
 
     # Testing scheduler
     # p1 = Person('Tom', (0,0), 'Tom is an introvert and a shy person who loves cows.', 1, ['Joy', 'Tim', 'John', 'Terry'])
