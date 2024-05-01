@@ -49,7 +49,7 @@ class Person:
   
 class ConversationAI:
     def __init__(self):
-        self.llm = LLM()
+        self.llm = LLM(False)
 
     def create_thread_and_perform_conversation(self, p1, p2, display=False):
         self.p1 = p1
@@ -125,14 +125,14 @@ class ScheduleMaker:
                         Write the actions and the time of start of action in a dictionary format. The time for dictionary should start at anywhere between 5:00 and 9:00 by waking up and end between 20:00 and 22:00 by going to sleep.''' + 
                         '''
                         Format: {"Start time for activity":"Name of activity"}
-                        Example: {"6:00":"WAKE UP", "6:30":"BRUSH", "7:00":"EXCERCISE", "8:00":"DANCE", "9:00":"BATH", "10:00":"COOK", "14:30":"EAT", "15:00":"SLEEP", "17:00":"WAKE UP", "17.30":"READ", "19:00":"BATH", "20:00":"EAT", "21:00":"SLEEP"}.
+                        Example: {"6:00":"WAKE UP", "7:00":"EXCERCISE", "8:00":"DANCE", "9:00":"BATH", "10:00":"COOK", "14:00":"EAT", "15:00":"SLEEP", "17:00":"WAKE UP", "17:30":"PLAY VIDEO GAMES", "20:00":"EAT", "21:00":"SLEEP"}.
                         Remember to make the time table of the agent as realistic and reasonable as possible and make sure that it follows the nature of the agent. The time block should ideally be a integer time or integer-and half time.
                         Ensure that all actions mentioned in the schedule should come from the given list of actions.
                         ''')
         pattern = r'\{(.*?)\}'
         data = '{' +re.findall(pattern, write_out)[0] + '}'
-        final_shedule = ast.literal_eval(data)
-        self.person.schedule = final_shedule
+        final_schedule = ast.literal_eval(data) # returns the string as a python expression
+        self.person.schedule = final_schedule
 
     def change_schedule(self, reason):
         '''Changes the schedule of a person, because of another person's intervention(the summary will be given in as reason.)'''
@@ -147,11 +147,11 @@ class ScheduleMaker:
                         '''
                         Format: {"Start time for activity":"Name of activity"}
                         Example: {"6:00":"WAKE UP", "6:30":"BRUSH", "7:00":"EXCERCISE", "8:00":"DANCE", "9:00":"BATH", "10:00":"COOK", "14:30":"EAT", "15:00":"SLEEP", "17:00":"WAKE UP", "17.30":"READ", "19:00":"BATH", "20:00":"EAT", "21:00":"SLEEP"}.
-                        Now carefully modify the schedule.''')
+                        Do not add any unnecessary data to the format and carefully modify the schedule.''')
         pattern = r'\{(.*?)\}'
         data = '{' +re.findall(pattern, write_out)[0] + '}'
-        final_shedule = ast.literal_eval(data)
-        self.person.schedule = final_shedule
+        final_schedule = ast.literal_eval(data) # returns the string as a python expression
+        self.person.schedule = final_schedule
 
 
 class CreatePerson:
@@ -211,18 +211,18 @@ if __name__ == '__main__':
 
 
     # Testing conversation AI
-    print(p1)
-    conv = ConversationAI()
-    conv.create_thread_and_perform_conversation(p1, p2, display=True)
-    print(p1)
+    # print(p1)
+    # conv = ConversationAI()
+    # conv.create_thread_and_perform_conversation(p1, p2, display=True)
+    # print(p1)
 
-    # # Testing scheduler and schedule changer AI
-    # sc = ScheduleMaker(p1)
-    # sc.create_new_schedule() 
-    # print(p1.schedule)
-    # print()
-    # sc.change_schedule('Tom is low on energy and want to sleep at 15.')
-    # print(p1.schedule)
+    # Testing scheduler and schedule changer AI
+    sc = ScheduleMaker(p1)
+    sc.create_new_schedule() 
+    print(p1.schedule)
+    print()
+    sc.change_schedule('Tom is low on energy and want to sleep at 16:00.')
+    print(p1.schedule)
 
 
     # # Test llm text generation
@@ -239,5 +239,4 @@ if __name__ == '__main__':
     #                    incident, then the cow will stomp him to death. Even the slightest clue and John is done. The cow even mooed at him. This scared the life out of John. 
     #                    John doesn't is so scared that he is willing to lie about never seeing the incident. Later, his brother asks if hehas seen anything about the murder of the mayor?
     #                    Will John tell the truth or will he lie to his brother?'''))
-
-    pass
+    print('Completed.')
