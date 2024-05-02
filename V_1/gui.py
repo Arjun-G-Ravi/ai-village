@@ -273,7 +273,7 @@ class Entity:
     NAME = ""
     OBJECT = None
     X,Y = 32, 32
-    SPEED = 32
+    SPEED = 64
     #entity sprite attributes
     FACING = "S"
     SPRITE = {}
@@ -386,6 +386,13 @@ class Entity:
                     self.X += distance
                 distance = 0
         return distance, cell_pass
+    
+    def check_surround(self, world):
+        for ent in world.ENTITIES:
+            if ent.NAME != self.NAME and abs(self.X-ent.X) < 5 and abs(self.Y-ent.Y) < 5:
+                #calculate probability of meeting
+                #meet with ent
+                pass
     
     def update(self, dt, world):
         #check for change in schedule
