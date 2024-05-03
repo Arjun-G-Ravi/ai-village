@@ -3,7 +3,7 @@ import random
 import threading
 import ast
 from groq import Groq
-from main import Person
+from Person import Person
 
 class AI_agents():
     '''This class is a abstraction of all other classes. '''
