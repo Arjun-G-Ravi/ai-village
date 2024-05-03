@@ -3,6 +3,68 @@ import random
 import threading
 import ast
 from groq import Groq
+from main import Person
+
+class AI_agents():
+    '''This class is a abstraction of all other classes. '''
+    def __init__(self):
+        pass
+
+    def conversation(self, p1, p2, display=False):
+        conv = ConversationAI()
+        if not display: conv.create_thread_and_perform_conversation(p1, p2)
+        else: conv.create_thread_and_perform_conversation(p1, p2, display=True)
+
+    def create_schedule(self, p):
+        sc = ScheduleMaker(p)
+        sc.create_new_schedule()
+
+    def change_schedule(self, p, reason):
+        sc = ScheduleMaker(p)
+        sc.change_schedule(reason)
+
+
+
+class CreatePerson:
+    '''Uses AI to create the character and behaviour of a person.'''
+    def __init__(self, ):
+        self.llm = LLM(temperature=0.5)
+
+    def write_new_character(self, name, character = False):
+        if character: out = self.llm.generate(f'''Write 5 character of a person called {name} as words or phrases separated by comma. 
+The character should follow these behaviours {character}. Also ensure that the text should be output in the following format:
+<Name>: < 5 characters>. 
+Dont answer anything else.''')
+            
+        else: out = self.llm.generate(f'''Write 5 character of a person called {name} as words or phrases separated by comma. 
+Also ensure that the text should be output in the following format:
+<Name>: < 5 characters>. 
+Dont answer anything else.''')
+        
+        with open('generated_base_characters.txt', 'a') as f:
+            f.write(out + '|\n')
+
+    def clear(self):
+        with open('generated_base_characters.txt', 'w') as f:
+            f.write('')
+
+    def person_list(self):
+        with open('generated_base_characters.txt', 'r') as f:
+            person_list = f.read().split('|\n')
+        persons = {}
+        for person in person_list:
+            if person:
+                new = person.split(':')
+                persons[new[0]] = new[1]
+        return persons
+
+# Global functions
+
+def create_new_person(name, char_dict):
+    return Person(name, char_dict[name], {k:'' for k,v in char_dict.items()})
+
+
+# ---------------------
 
 class LLM:
     def __init__(self, temperature = 0.2):
@@ -17,39 +79,12 @@ class LLM:
             # All models: llama3-8b-8192 llama3-70b-8192 gemma-7b-it mixtral-8x7b-32768
             temperature = self.temperature)
         return chat_completion.choices[0].message.content
-    
 
-
-class Person:
-    def __init__(self, name, base_character, villagers,energy = 1, position = (0,0)):
-        self.name = name
-        self.position = position
-        self.base_character = base_character
-        self.schedule = {} # Schedule is a dictionary of time:action
-        self.relationship = {v:0.5 for v in villagers} # maybe randomise at the start?
-        self.energy = energy
-        self.villagers = villagers
-        self.memory = {v:'' for v in villagers} 
-        
-    # def __repr__(self): # Very detailed repr for testing
-    #     return f'''Person: {self.name}
-    # Base character: {self.base_character}
-    # Energy: {self.energy}
-    # Schedule: {self.schedule}
-    # Relationship: {self.relationship}
-    # Memory: {self.memory}'''
-
-    def __repr__(self):
-        return f'''Person: {self.name}
-    Energy: {self.energy}
-    Relationship: {self.relationship}
-    Memory: {self.memory}'''
-    
 
   
 class ConversationAI:
     def __init__(self):
-        self.llm = LLM(False)
+        self.llm = LLM(temperature = 0.3)
 
     def create_thread_and_perform_conversation(self, p1, p2, display=False):
         self.p1 = p1
@@ -117,7 +152,7 @@ class ScheduleMaker:
     
     def create_new_schedule(self):
         '''Adds the shedule to shedule method of the Person object'''
-        writer = LLM(temperature=0.4)
+        writer = LLM(temperature=0.3)
         write_out = writer.generate(f'''Using the base character of the AI and memory, write the actions performed by the AI agents in a day.
                         possible actions: {self.actions}
                         base character: {self.person.base_character}
@@ -136,63 +171,23 @@ class ScheduleMaker:
 
     def change_schedule(self, reason):
         '''Changes the schedule of a person, because of another person's intervention(the summary will be given in as reason.)'''
-        writer = LLM(temperature=0.2)
+        writer = LLM(temperature=0.3)
         write_out = writer.generate(f'''Using the base character of the AI, memory and factor that affect schedule, write the actions performed by the AI agents for a day.
                         previous schedule: {self.person.schedule}
                         Factor that affect schedule: {reason}
                         possible action pool: {self.actions}
                         Change the schedule with the help of the above factor. Ensure that all the actions in the schedule comes from the given action pool. The time block should ideally be a integer time or integer-and half time.
-                        If the agent is meeting to somebody at any place, the agent have to first reach that place(takes an hour) and then perform the action MEET for atleast an hour.
-                        If the agent wants to sleep at any time, go to sleep. Sleep for atleast two hours.''' + 
+                        If the agent is meeting to somebody at any place, the agent have to first reach that place(takes an hour) and then perform the action MEET for atleast an hour. Dont put any other actions there.''' + 
                         '''
                         Format: {"Start time for activity":"Name of activity"}
                         Example: {"6:00":"WAKE UP", "6:30":"BRUSH", "7:00":"EXCERCISE", "8:00":"DANCE", "9:00":"BATH", "10:00":"COOK", "14:30":"EAT", "15:00":"SLEEP", "17:00":"WAKE UP", "17.30":"READ", "19:00":"BATH", "20:00":"EAT", "21:00":"SLEEP"}.
-                        Do not add any unnecessary data to the format and carefully modify the schedule.''')
+                        Do not add any unnecessary data or ACTIONS to the schedule and carefully modify the schedule.''')
         pattern = r'\{(.*?)\}'
         data = '{' +re.findall(pattern, write_out)[0] + '}'
         final_schedule = ast.literal_eval(data) # returns the string as a python expression
         self.person.schedule = final_schedule
 
-
-class CreatePerson:
-    '''Uses AI to create the character and behaviour of a person.'''
-    def __init__(self, ):
-        self.llm = LLM(temperature=0.5)
-
-    def write_new_character(self, name, character = False):
-        if character: out = self.llm.generate(f'''Write 5 character of a person called {name} as words or phrases separated by comma. 
-The character should follow these behaviours {character}. Also ensure that the text should be output in the following format:
-<Name>: < 5 characters>. 
-Dont answer anything else.''')
-            
-        else: out = self.llm.generate(f'''Write 5 character of a person called {name} as words or phrases separated by comma. 
-Also ensure that the text should be output in the following format:
-<Name>: < 5 characters>. 
-Dont answer anything else.''')
-        
-        with open('generated_base_characters.txt', 'a') as f:
-            f.write(out + '|\n')
-
-    def clear(self):
-        with open('generated_base_characters.txt', 'w') as f:
-            f.write('')
-
-    def person_list(self):
-        with open('generated_base_characters.txt', 'r') as f:
-            person_list = f.read().split('|\n')
-        persons = {}
-        for person in person_list:
-            if person:
-                new = person.split(':')
-                persons[new[0]] = new[1]
-        return persons
-
-# Global functions
-
-def create_new_person(name, char_dict):
-    return Person(name, char_dict[name], {k:'' for k,v in char_dict.items()})
-
-  
+ 
 
 if __name__ == '__main__':
 
@@ -209,6 +204,35 @@ if __name__ == '__main__':
     p1 = create_new_person('John', char_dict)
     p2 = create_new_person('Terry', char_dict)
 
+    ai = AI_agents()
+
+    # Testing conversation
+    print('-'*20)
+    print(p1)
+    ai.conversation(p1,p2, display=True)
+    print(p1)
+
+    # Testing create_schedule
+    print('-'*20)
+    ai.create_schedule(p1)
+    print(p1.schedule)
+
+    # Testing update_schedule
+    print('-'*20)
+    ai.change_schedule(p1, 'Tom decided to meet with Janet at 15:00 in the market.')
+    print(p1.schedule)
+
+
+
+
+
+
+
+
+
+
+
+    #################### OLD TESTS ############################
 
     # Testing conversation AI
     # print(p1)
@@ -217,12 +241,12 @@ if __name__ == '__main__':
     # print(p1)
 
     # Testing scheduler and schedule changer AI
-    sc = ScheduleMaker(p1)
-    sc.create_new_schedule() 
-    print(p1.schedule)
-    print()
-    sc.change_schedule('Tom is low on energy and want to sleep at 16:00.')
-    print(p1.schedule)
+    # sc = ScheduleMaker(p1)
+    # sc.create_new_schedule() 
+    # print(p1.schedule)
+    # print()
+    # sc.change_schedule('Tom is low on energy and want to sleep at 16:00.')
+    # print(p1.schedule)
 
 
     # # Test llm text generation
