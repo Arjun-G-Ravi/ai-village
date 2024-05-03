@@ -1,5 +1,6 @@
 import pygame
 import random
+from village_classes import AI_agents
 from queue import PriorityQueue
 
 pygame.init()
@@ -58,8 +59,11 @@ class Window:
     #time attributes
     DT = 1
     TIMER = 0
+    global AI
+    #initialise AI
+    AI = AI_agents()
     
-    def __init__(self):
+    def __init__(self,person_list):
         #display info
         self.DISPLAY_INFO = pygame.display.Info()
         #create window with fullscreen
@@ -70,7 +74,7 @@ class Window:
         #take window width and height
         self.WINDOW_WIDTH,self.WINDOW_HEIGHT = pygame.display.get_window_size()
         #instantiate the world
-        self.WORLD = World(r"./Sprites/First_Temp.png")
+        self.WORLD = World(r"./Sprites/First_Temp.png",person_list)
         self.FONT = pygame.font.SysFont("calibri", 16)
         #start the event loop
         self.event_loop()
@@ -182,7 +186,7 @@ class World:
         "Market" : ((93,69),(94,69),(93,39),(94,39),(113,54),(113,55),(73,54),(73,55))
     }
     
-    def __init__(self,path):
+    def __init__(self,path,person_list):
         self.set_texture(path)
         
         #sprite mask
@@ -193,10 +197,11 @@ class World:
         self.SPRITE_GROUP = pygame.sprite.GroupSingle(sprite)
         
         #create list of entities in the environment
-        self.init_entities()
+        self.init_entities(person_list)
     
-    def init_entities(self):
+    def init_entities(self, person_list):
         #create the entities in the world
+        '''
         schedule = {
             "5:00" : "WAKE UP",
             "5:30" : "WATCH TV",
@@ -210,7 +215,13 @@ class World:
             "19:00" : "EAT",
             "21:00" : "SLEEP",
         }
-        self.ENTITIES.append(Entity("John", r"./Sprites/Sample_Character.png",self.SCALE,schedule,self.LOCATIONS["House1"],self))
+        '''
+        for obj in person_list:
+            entity = Entity(obj.name, r"./Sprites/Sample_Character.png",self.SCALE,obj,self.LOCATIONS["House1"],self)
+            AI.create_schedule(obj)
+            print(obj.schedule)
+            self.ENTITIES.append(entity)
+            
     
     def set_scale(self,scale):
         #update scale of world
@@ -288,9 +299,9 @@ class Entity:
     TASK_INDEX = 0
     INTERACTABLE = {}
     
-    def __init__(self, name, path, scale, schedule, house, world):
+    def __init__(self, name, path, scale, person, house, world):
         self.NAME = name
-        self.SCHEDULE = schedule
+        self.PERSON = person
         self.PATH = list()
         self.INTERACTABLE = house
         #for mask
@@ -397,7 +408,7 @@ class Entity:
     def update(self, dt, world):
         #check for change in schedule
         time = world.get_time()
-        if time in self.SCHEDULE.keys() and self.SCHEDULE[time] != self.TASK:
+        if time in self.PERSON.schedule.keys() and self.PERSON.schedule[time] != self.TASK:
             self.change_task(time,world)
         if self.TASK == "SLEEP":
             if self.PATH != []:
@@ -542,7 +553,8 @@ class Entity:
         self.PATH = path.copy()
     
     def change_task(self, time, world):
-        self.TASK = self.SCHEDULE[time]
+        print(self.NAME,"is doing",self.TASK)
+        self.TASK = self.PERSON.schedule[time]
         if self.TASK in ["COOK"]:
             self.TASK_INDEX = 0
         self.init_task(world)
