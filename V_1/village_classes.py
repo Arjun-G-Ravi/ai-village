@@ -150,41 +150,70 @@ class ScheduleMaker:
             self.actions = f.read().split('\n')
             self.actions.remove('TALK')
     
+    def clean_wrong_schedule(self, schedule):
+        to_remove = []
+        for t,a in schedule.items():
+                if a not in self.actions:
+                        print('WRONG ACTIONS:', a)
+                        if 'LUNCH' in a or 'FOOD' in a or 'EAT' in a or 'BREAKFAST' in a or 'DINNER' in a: schedule[t] = 'EAT'
+                        elif 'SHOWER' in a: schedule[t] = 'BATH'
+                        else: to_remove.append(t)
+        for i in to_remove: schedule.pop(i)
+        return schedule
+    
     def create_new_schedule(self):
         '''Adds the shedule to shedule method of the Person object'''
-        writer = LLM(temperature=0.3)
-        write_out = writer.generate(f'''Using the base character of the AI and memory, write the actions performed by the AI agents in a day.
-                        possible actions: {self.actions}
-                        base character: {self.person.base_character}
-                        relevant memory: {self.person.memory}
-                        Write the actions and the time of start of action in a dictionary format. The time for dictionary should start at anywhere between 5:00 and 9:00 by waking up and end between 20:00 and 22:00 by going to sleep.''' + 
+        writer = LLM(temperature=0)
+        write_out = writer.generate(f'''You are modified to act as a LLM that creates the schedule for AI agents to work in a simluated environment.
+                        Using following details, craft the schedule to be followed by the agent during a day.
+                        Available actions: {self.actions}
+                        Base character: {self.person.base_character}
+                        Relevant memory: {self.person.memory}
+                        Write the actions and the time of start of action in a dictionary format. The time for dictionary can start at anywhere between 5:00 and 9:00 by the action "WAKE UP" and end between 20:00 and 22:00 by the action "SLEEP".''' + 
                         '''
                         Format: {"Start time for activity":"Name of activity"}
-                        Example: {"6:00":"WAKE UP", "7:00":"EXCERCISE", "8:00":"DANCE", "9:00":"BATH", "10:00":"COOK", "14:00":"EAT", "15:00":"SLEEP", "17:00":"WAKE UP", "17:30":"PLAY VIDEO GAMES", "20:00":"EAT", "21:00":"SLEEP"}.
-                        Remember to make the time table of the agent as realistic and reasonable as possible and make sure that it follows the nature of the agent. The time block should ideally be a integer time or integer-and half time.
-                        Ensure that all actions mentioned in the schedule should come from the given list of actions.
+                        Example: {"6:00":"WAKE UP", "7:00":"EXCERCISE", "9:00":"BATH", "10:00":"COOK", "14:00":"EAT", "15:00":"WATCH TV", "17:00":"GO TO MARKET", "19:30":"COME BACK HOME", "20:00":"EAT", "21:00":"SLEEP"}.
+                        The time block should ideally be a integer time or integer-and half time. MAKE SURE THAT ALL THE ACTIONS ARE GENERATED FROM THE AVAILABLE ACTIONS. Now generate schedule: 
                         ''')
         pattern = r'\{(.*?)\}'
         data = '{' +re.findall(pattern, write_out)[0] + '}'
         final_schedule = ast.literal_eval(data) # returns the string as a python expression
+        final_schedule = self.clean_wrong_schedule(final_schedule)
         self.person.schedule = final_schedule
 
     def change_schedule(self, reason):
         '''Changes the schedule of a person, because of another person's intervention(the summary will be given in as reason.)'''
-        writer = LLM(temperature=0.3)
-        write_out = writer.generate(f'''Using the base character of the AI, memory and factor that affect schedule, write the actions performed by the AI agents for a day.
+        writer = LLM(temperature=0.1)
+        write_out = writer.generate(f'''You are modified to act as a LLM that creates the schedule for AI agents to work in a simluated environment.
+                        Using following details, craft the schedule to be followed by the agent during a day.
+                        Possible actions: {self.actions}
                         previous schedule: {self.person.schedule}
                         Factor that affect schedule: {reason}
-                        possible action pool: {self.actions}
-                        Change the schedule with the help of the above factor. Ensure that all the actions in the schedule comes from the given action pool. The time block should ideally be a integer time or integer-and half time.
-                        If the agent is meeting to somebody at any place, the agent have to first reach that place(takes an hour) and then perform the action MEET for atleast an hour. Dont put any other actions there.''' + 
+                        Modify the previous schedule for the AI agent by consider the reason. The time for dictionary can start at anywhere between 5:00 and 9:00 by the action "WAKE UP" and end between 20:00 and 22:00 by the action "SLEEP".''' + 
                         '''
                         Format: {"Start time for activity":"Name of activity"}
-                        Example: {"6:00":"WAKE UP", "6:30":"BRUSH", "7:00":"EXCERCISE", "8:00":"DANCE", "9:00":"BATH", "10:00":"COOK", "14:30":"EAT", "15:00":"SLEEP", "17:00":"WAKE UP", "17.30":"READ", "19:00":"BATH", "20:00":"EAT", "21:00":"SLEEP"}.
-                        Do not add any unnecessary data or ACTIONS to the schedule and carefully modify the schedule.''')
+                        Example: {"5:00":"WAKE UP", "5:30":"BATH", "6:00":"WATCH TV", "9:00":"GO TO MARKET", "17:00":"COME BACK HOME", "17:30":"PLAY VIDEO GAMES", "20:00":"EAT", "21:00":"SLEEP"}.
+                        If the agent is meeting to somebody at any place, the agent have to first reach that place(takes an hour) and then perform the action MEET for atleast an hour. 
+                        The time block should ideally be a integer time or integer-and half time. MAKE SURE THAT ALL THE ACTIONS ARE GENERATED FROM THE AVAILABLE ACTIONS. Do not return anything else to destroy the format of the new schedule.
+                        Now generate the modified schdule:
+                        ''')
+
+
+
+        # write_out = writer.generate(f'''Using the base character of the AI, memory and factor that affect schedule, write the actions performed by the AI agents for a day.
+        #                 previous schedule: {self.person.schedule}
+        #                 Factor that affect schedule: {reason}
+        #                 possible action pool: {self.actions}
+        #                 Change the schedule with the help of the above factor. Ensure that all the actions in the schedule comes from the given action pool. The time block should ideally be a integer time or integer-and half time.
+        #                 If the agent is meeting to somebody at any place, the agent have to first reach that place(takes an hour) and then perform the action MEET for atleast an hour. Dont put any other actions there.''' + 
+        #                 '''
+        #                 Format: {"Start time for activity":"Name of activity"}
+        #                 Example: {"6:00":"WAKE UP", "6:30":"BRUSH", "7:00":"EXCERCISE", "8:00":"DANCE", "9:00":"BATH", "10:00":"COOK", "14:30":"EAT", "15:00":"SLEEP", "17:00":"WAKE UP", "17.30":"READ", "19:00":"BATH", "20:00":"EAT", "21:00":"SLEEP"}.
+        #                 Do not add any unnecessary data or ACTIONS to the schedule and carefully modify the schedule.''')
         pattern = r'\{(.*?)\}'
         data = '{' +re.findall(pattern, write_out)[0] + '}'
         final_schedule = ast.literal_eval(data) # returns the string as a python expression
+        final_schedule = self.clean_wrong_schedule(final_schedule)
         self.person.schedule = final_schedule
 
  
