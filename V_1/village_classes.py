@@ -160,6 +160,7 @@ class ScheduleMaker:
                         print('WRONG ACTIONS:', a)
                         if 'LUNCH' in a or 'FOOD' in a or 'EAT' in a or 'BREAKFAST' in a or 'DINNER' in a: schedule[t] = 'EAT'
                         elif 'SHOWER' in a: schedule[t] = 'BATH'
+                        elif 'COME BACK' in a: schedule[t] = 'COME BACK HOME'
                         else: to_remove.append(t)
         for i in to_remove: schedule.pop(i)
         return schedule
