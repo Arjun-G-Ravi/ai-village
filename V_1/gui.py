@@ -255,7 +255,7 @@ class World:
         '''
         for i,obj in enumerate(person_list):
             AI.create_schedule(obj)
-            print("Schedule for",obj.name)
+            print("\n"+"-"*20+"\nSchedule for",obj.name)
             print(obj.schedule)
             entity = Entity(obj.name, r"./Sprites/Sample_Character.png",self.SCALE,obj,self.LOCATIONS["House"+str((i+1)%4)],self)
             self.ENTITIES.append(entity)
@@ -370,7 +370,7 @@ class Entity:
         print(self.NAME+"'s sprite textures scaled")
         #initialise tasks
         self.init_task(world)
-        print(self.NAME+"'s task initialised")
+        print(self.NAME+"'s task initialised\n")
     
     def set_texture(self, path):
         spritesheet = pygame.image.load(path).convert_alpha()
