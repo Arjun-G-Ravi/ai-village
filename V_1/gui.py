@@ -74,7 +74,7 @@ class Window:
         #take window width and height
         self.WINDOW_WIDTH,self.WINDOW_HEIGHT = pygame.display.get_window_size()
         #instantiate the world
-        self.WORLD = World(r"./Sprites/First_Temp.png",person_list)
+        self.WORLD = World(person_list)
         self.FONT = pygame.font.SysFont("calibri", 16)
         #start the event loop
         self.event_loop()
@@ -167,27 +167,62 @@ class World:
     #Time attributes
     TIME = 0
     MAX_TIME = 48         # 24 * 2 (30 minute intervals)
+    DARKNESS = 150
     #important locations
     LOCATIONS = {
         "House1" : {
-            "Entrance" : ((25,29),(26, 29)),
-            "Kitchen" : ((37, 10),(30,11),(31,10),(33,10)),
+            "Kitchen" : ((31, 11),(30,11),(36,11),(33,11),(34,11)),
             "Kitchen_Seat" : ((34,12),(34,13)),
-            "Toilet" : ((27, 10   ),),
+            "Bath" : ((25,11),),
+            "Toilet" : ((27, 11),),
+            "Bed" : ((17, 11),(17,18)),
+            "TV" : ((36, 20),(35, 20)),
+            "Bookshelf" : ((28, 19),),
+            "Seat" : ((34, 24),(31,24)),
+            "Seat_Dir" : {(34, 24):"S",(31,24):"S",(34,12):"E",(34,13):"E",(36, 20):"N",(35, 20):"N"},
+            "Corner" : ((39,30),(39,8),(12,8),(12,30))
+        },
+        "House2" : {
+            "Kitchen" : ((34, 61),(33,61),(39,61),(36,61),(37,61)),
+            "Kitchen_Seat" : ((37,62),(37,63)),
+            "Bath" : ((28,61),),
+            "Toilet" : ((30, 61),),
+            "Bed" : ((20, 61),(20,68)),
+            "TV" : ((38, 70),(39, 70)),
+            "Bookshelf" : ((31, 69),),
+            "Seat" : ((34, 74),(39,70)),
+            "Seat_Dir" : {(34, 74):"S",(39,70):"S",(37,62):"E",(37,63):"E",(38, 70):"N",(39, 70):"N"},
+            "Corner" : ((42,80),(42,58),(15,58),(15,80))
+        },
+        "House3" : {
+            "Kitchen" : ((165, 17),(164,17),(170,17),(167,17),(168,17)),
+            "Kitchen_Seat" : ((168,18),(168,19)),
+            "Bath" : ((159,17),),
+            "Toilet" : ((161, 17),),
+            "Bed" : ((151, 17),(151,24)),
+            "TV" : ((169, 26),(170, 26)),
+            "Bookshelf" : ((162, 25),),
+            "Seat" : ((165,30),(168,30)),
+            "Seat_Dir" : {(165, 30):"S",(168,30):"S",(168,18):"E",(168,19):"E",(169, 26):"N",(170, 26):"N"},
+            "Corner" : ((173,36),(173,16),(146,16),(146,36))
+        },
+        #from here update
+        "House4" : {
+            "Kitchen" : ((31, 11),(30,11),(36,11),(33,11),(34,11)),
+            "Kitchen_Seat" : ((34,12),(34,13)),
+            "Bath" : ((25,11),),
+            "Toilet" : ((27, 10),),
             "Bed" : ((17, 11),(17,18)),
             "TV" : ((36, 20),(35, 20)),
             "Bookshelf" : ((28, 19),),
             "Seat" : ((34, 24),),
             "Seat_Dir" : {(34, 24):"S",(34,12):"E",(34,13):"E",(36, 20):"N",(35, 20):"N"}
         },
-        "House2" : ((26,83),(27,83)),
-        "House3" : ((145,34),(146,34)),
-        "House4" : ((158,90),(159,90)),
         "Market" : ((93,69),(94,69),(93,39),(94,39),(113,54),(113,55),(73,54),(73,55))
     }
     
-    def __init__(self,path,person_list):
-        self.set_texture(path)
+    def __init__(self,person_list):
+        self.set_texture()
         
         #sprite mask
         sprite = pygame.sprite.Sprite()
@@ -195,6 +230,8 @@ class World:
         sprite.rect = sprite.image.get_rect(topleft = (self.X,self.Y))
         sprite.mask = pygame.mask.from_surface(sprite.image)
         self.SPRITE_GROUP = pygame.sprite.GroupSingle(sprite)
+        self.SKY = pygame.Surface((2000,1500),pygame.SRCALPHA)
+        self.SKY.fill((0,0,0,self.DARKNESS))
         
         #create list of entities in the environment
         self.init_entities(person_list)
@@ -216,10 +253,11 @@ class World:
             "21:00" : "SLEEP",
         }
         '''
-        for obj in person_list:
-            entity = Entity(obj.name, r"./Sprites/Sample_Character.png",self.SCALE,obj,self.LOCATIONS["House1"],self)
+        for i,obj in enumerate(person_list):
             AI.create_schedule(obj)
+            print("Schedule for",obj.name)
             print(obj.schedule)
+            entity = Entity(obj.name, r"./Sprites/Sample_Character.png",self.SCALE,obj,self.LOCATIONS["House"+str((i+1)%4)],self)
             self.ENTITIES.append(entity)
             
     
@@ -249,19 +287,26 @@ class World:
         #render the world texture
         surface.blit(self.SCALED_TEXTURE, (self.X, self.Y))
         self.draw_entities(surface)
+        surface.blit(self.SKY, (0,0))
     
     def draw_entities(self,surface):
         #draws all the entities in the world
         for entity in self.ENTITIES:
             entity.render(surface, self.X, self.Y, self.SCALE)
     
-    def set_texture(self, path):
-        texture = pygame.image.load(r"./Sprites/First_Temp.png").convert()
+    def set_texture(self):
+        texture = pygame.image.load(r"./Sprites/World.png").convert()
         #set the texture for the world
         self.TEXTURE = texture
         self.scale()
     
     def update(self, dt):
+        if self.DARKNESS > 0 and self.TIME > 11 and self.TIME < 35:
+            self.DARKNESS -= 0.5
+            self.SKY.fill((0,0,0,int(self.DARKNESS)))
+        if self.DARKNESS < 150 and self.TIME > 35:
+            self.DARKNESS += 0.5
+            self.SKY.fill((0,0,0,int(self.DARKNESS)))
         for entity in self.ENTITIES:
             entity.update(dt,self)
     
@@ -288,7 +333,7 @@ class Entity:
     #entity sprite attributes
     FACING = "S"
     SPRITE = {}
-    STATE = "IDLE"
+    STATE = "SLEEP"
     FRAME = 0
     #entity actions
     with open('./actions.txt','r') as file:
@@ -304,6 +349,12 @@ class Entity:
         self.PERSON = person
         self.PATH = list()
         self.INTERACTABLE = house
+        print(self.NAME+"'s attributes initialised")
+        #set current location to bed
+        self.X,self.Y = self.INTERACTABLE["Bed"][0]
+        self.X *= 16
+        self.Y *= 16
+        print(self.NAME+"'s location initialised")
         #for mask
         sprite = pygame.sprite.Sprite()
         sprite.image = pygame.Surface((16*scale,16*scale))
@@ -311,11 +362,15 @@ class Entity:
         sprite.rect = sprite.image.get_rect(topleft = (self.X,self.Y))
         sprite.mask = pygame.mask.from_surface(sprite.image)
         self.SPRITE_GROUP = pygame.sprite.GroupSingle(sprite)
+        print(self.NAME+"'s sprite mask initialised")
         #texture of character
         self.set_texture(path)
+        print(self.NAME+"'s sprite texture initialised")
         self.scale_sprite(scale)
+        print(self.NAME+"'s sprite textures scaled")
         #initialise tasks
         self.init_task(world)
+        print(self.NAME+"'s task initialised")
     
     def set_texture(self, path):
         spritesheet = pygame.image.load(path).convert_alpha()
@@ -400,7 +455,7 @@ class Entity:
     
     def check_surround(self, world):
         for ent in world.ENTITIES:
-            if ent.NAME != self.NAME and abs(self.X-ent.X) < 5 and abs(self.Y-ent.Y) < 5:
+            if ent.NAME != self.NAME and abs(self.X-ent.X) < 80 and abs(self.Y-ent.Y) < 80:
                 #calculate probability of meeting
                 #meet with ent
                 pass
@@ -452,7 +507,7 @@ class Entity:
             if self.STATE == "IDLE":
                 self.ACTION_TIMER -= 1
                 if self.ACTION_TIMER == 0:
-                    self.TASK_INDEX = (self.TASK_INDEX+1)%4
+                    self.TASK_INDEX = (self.TASK_INDEX+1)%5
                     self.init_task(world)
             else:
                 if self.PATH != []:
@@ -536,6 +591,45 @@ class Entity:
                         self.scale_sprite(world.SCALE)
                 if self.TASK in ["WATCH TV","PLAY VIDEO GAMES"]:
                     self.PATH.append(next_cell)
+        elif self.TASK == "EXCERCISE":
+            if self.STATE == "IDLE":
+                self.TASK_INDEX = (self.TASK_INDEX+1)%4
+                self.init_task(world)
+            else:
+                if self.PATH != []:
+                    next_cell = self.PATH.pop()
+                    self.PATH.append(next_cell)
+                    distance = self.SPEED*dt
+                    while distance>0:
+                        distance, passed = self.update_distance(distance,next_cell)
+                        if passed and self.PATH!=[]:
+                            next_cell = self.PATH.pop()
+                            self.scale_sprite(world.SCALE)
+                        elif not passed:
+                            self.PATH.append(next_cell)
+                        elif self.PATH == [] and (self.X//16,self.Y//16) in self.INTERACTABLE["Corner"]:
+                            self.STATE = "IDLE"
+                            self.FRAME = 0
+                            self.scale_sprite(world.SCALE)
+        elif self.TASK == "BATH":
+            if self.PATH != []:
+                next_cell = self.PATH.pop()
+                self.PATH.append(next_cell)
+                distance = self.SPEED*dt
+                while distance>0:
+                    distance, passed = self.update_distance(distance,next_cell)
+                    if passed and self.PATH!=[]:
+                        next_cell = self.PATH.pop()
+                        self.scale_sprite(world.SCALE)
+                    elif not passed:
+                        self.PATH.append(next_cell)
+                    elif self.PATH == [] and (self.X//16,self.Y//16) in self.INTERACTABLE["Bath"]:
+                        self.STATE = "IDLE"
+                        self.FRAME = 0
+                        self.TASK = "IDLE"
+                        self.scale_sprite(world.SCALE)
+                if self.TASK == "BATH":
+                    self.PATH.append(next_cell)
         #print(world.check_collision(self.SPRITE_GROUP.sprite))
         # print(world.SCALE)
         pass
@@ -553,10 +647,10 @@ class Entity:
         self.PATH = path.copy()
     
     def change_task(self, time, world):
-        print(self.NAME,"is doing",self.TASK)
         self.TASK = self.PERSON.schedule[time]
-        if self.TASK in ["COOK"]:
+        if self.TASK in ["COOK","EXCERCISE"]:
             self.TASK_INDEX = 0
+        print(self.NAME,"is doing",self.TASK)
         self.init_task(world)
     
     def init_task(self,world):
@@ -607,6 +701,22 @@ class Entity:
             self.STATE = "WALK"
             self.FRAME = 0
             self.PATH = pathfinder((self.X//16,self.Y//16),self.INTERACTABLE["TV"],world)
+            #setting facing direction
+            self.set_dir()
+            self.scale_sprite(world.SCALE)
+        elif self.TASK == "EXCERCISE":
+            #get path to a house corner (walks around the house) 
+            self.STATE = "WALK"
+            self.FRAME = 0
+            self.PATH = pathfinder((self.X//16,self.Y//16),(self.INTERACTABLE["Corner"][self.TASK_INDEX],),world)
+            #setting facing direction
+            self.set_dir()
+            self.scale_sprite(world.SCALE)
+        elif self.TASK == "BATH" and (self.X//16,self.Y//16) not in self.INTERACTABLE["Bath"]:
+            #get path to shower
+            self.STATE = "WALK"
+            self.FRAME = 0
+            self.PATH = pathfinder((self.X//16,self.Y//16),self.INTERACTABLE["Bath"],world)
             #setting facing direction
             self.set_dir()
             self.scale_sprite(world.SCALE)
