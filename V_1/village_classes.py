@@ -6,7 +6,7 @@ from groq import Groq
 from Person import Person
 
 class AI_agents():
-    '''This class is a abstraction of all other classes. '''
+    '''This class is a abstraction of all other classes. This is the only class to be used on other parts. '''
     def __init__(self):
         pass
 
@@ -67,8 +67,9 @@ def create_new_person(name, char_dict):
 # ---------------------
 
 class LLM:
-    def __init__(self, temperature = 0.2):
+    def __init__(self, temperature = 0.2, top_p=0.3):
         self.temperature = temperature
+        self.top_p = top_p
         self.client = Groq(api_key='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')
 
     def generate(self, inp):
@@ -77,7 +78,9 @@ class LLM:
             messages=[{"role": "user","content": f"{inp}"}],
             model="llama3-8b-8192",
             # All models: llama3-8b-8192 llama3-70b-8192 gemma-7b-it mixtral-8x7b-32768
-            temperature = self.temperature)
+            temperature = self.temperature,
+            top_p=self.top_p)
+
         return chat_completion.choices[0].message.content
 
 
@@ -163,7 +166,7 @@ class ScheduleMaker:
     
     def create_new_schedule(self):
         '''Adds the shedule to shedule method of the Person object'''
-        writer = LLM(temperature=0)
+        writer = LLM(temperature=0, top_p=.1)
         write_out = writer.generate(f'''You are modified to act as a LLM that creates the schedule for AI agents to work in a simluated environment.
                         Using following details, craft the schedule to be followed by the agent during a day.
                         Available actions: {self.actions}
@@ -183,7 +186,7 @@ class ScheduleMaker:
 
     def change_schedule(self, reason):
         '''Changes the schedule of a person, because of another person's intervention(the summary will be given in as reason.)'''
-        writer = LLM(temperature=0.1)
+        writer = LLM(temperature=0.1, top_p=.1)
         write_out = writer.generate(f'''You are modified to act as a LLM that creates the schedule for AI agents to work in a simluated environment.
                         Using following details, craft the schedule to be followed by the agent during a day.
                         Possible actions: {self.actions}
@@ -193,7 +196,7 @@ class ScheduleMaker:
                         '''
                         Format: {"Start time for activity":"Name of activity"}
                         Example: {"5:00":"WAKE UP", "5:30":"BATH", "6:00":"WATCH TV", "9:00":"GO TO MARKET", "17:00":"COME BACK HOME", "17:30":"PLAY VIDEO GAMES", "20:00":"EAT", "21:00":"SLEEP"}.
-                        If the agent is meeting to somebody at any place, the agent have to first reach that place(takes an hour) and then perform the action MEET for atleast an hour. 
+                        If the agent is meeting to somebody at any place, the agent have to first reach that place using action like "GO TO MARKET" (takes an hour) and then perform the action MEET for atleast an hour. 
                         The time block should ideally be a integer time or integer-and half time. MAKE SURE THAT ALL THE ACTIONS ARE GENERATED FROM THE AVAILABLE ACTIONS. Do not return anything else to destroy the format of the new schedule.
                         Now generate the modified schdule:
                         ''')
