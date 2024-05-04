@@ -1,5 +1,5 @@
 from village_classes import Person, ConversationAI
-from base_characters import base_character_dict
+from V_1.test_code.base_characters import base_character_dict
 import random
 
 p1 = Person('Tom',  (0,0), base_character_dict['Tom'],  1, ['Joy', 'Jane', 'John', 'Terry'])
