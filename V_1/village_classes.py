@@ -133,8 +133,8 @@ RELATIONSHIP:number.(Write only the number. Don't add any text here)''')
                 person2.memory[person1.name] += conversation[9: ]
             if 'RELATIONSHIP:' or 'RELATIONSHIP :' in conversation:
                 matches = re.findall(r'\b0\.\d+\b', conversation)
-                if matches: person1.relationship[person2.name] = matches[0]
-                if matches: person2.relationship[person1.name] = matches[0]
+                if matches: person1.relationship[person2.name] = float(matches[0])
+                if matches: person2.relationship[person1.name] = float(matches[0])
 
         person1.energy -= random.randint(1,3)*0.1
         person1.energy = round(person1.energy, 1)
