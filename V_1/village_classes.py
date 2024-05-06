@@ -97,9 +97,13 @@ class ConversationAI:
         thread.join()
 
     def _thread_function(self, p1, p2, display):
+        self.p1.is_in_conversation = True
+        self.p2.is_in_conversation = True
         conv = self._perform_conversation()
         self._update_stats(p1, p2)
         if display: print(conv)
+        self.p1.is_in_conversation = False
+        self.p2.is_in_conversation = False
 
     def _perform_conversation(self):
         self.conv = self.llm.generate(f'''Generate a relevant conversation between {self.p1.name} and {self.p2.name} using the following details.

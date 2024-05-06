@@ -8,6 +8,7 @@ class Person:
         self.energy = energy
         self.villagers = villagers
         self.memory = {v:'' for v in villagers} 
+        self.is_in_conversation = False
         
     # def __repr__(self): # Very detailed repr for testing
     #     return f'''Person: {self.name}
