@@ -1,2 +1,2 @@
-John: Loud, Outgoing, Jovial, Nervous, Energetic, Go to market at 8:00.|
-Terry: Quiet, Nerdy, Obsessive, Cinephile, Geek, Go to market at 8:00.|
+John: Loud, Outgoing, Jovial, Nervous, Energetic.|
+Terry: Quiet, Nerdy, Obsessive, Cinephile, Geek.|

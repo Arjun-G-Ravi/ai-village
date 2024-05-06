@@ -496,35 +496,48 @@ class Entity:
         return distance, cell_pass
     
     def check_surround(self, world):
-        for ent in world.ENTITIES:
-            if ent.NAME != self.NAME and abs(self.X-ent.X) < 160 and abs(self.Y-ent.Y) < 80:
-                #calculate probability of meeting
-                prob = self.PERSON.relationship[ent.NAME]*self.PERSON.energy
-                if random.random() < prob:
-                    if (self.X//16,self.Y//16) in world.OCCUPIED:
-                        world.OCCUPIED.remove((self.X//16,self.Y//16))
-                    if (ent.X//16,ent.Y//16) in world.OCCUPIED:
-                        world.OCCUPIED.remove((ent.X//16,ent.Y//16))
-                    print("inside meet")
-                    self.MEET = True
-                    self.TASK = "MEET"
-                    self.STATE = "WALK"
-                    self.FRAME = 0
-                    ent.TASK = "MEET"
-                    ent.STATE = "WALK"
-                    ent.FRAME = 0
-                    path = pathfinder((self.X//16,self.Y//16),((ent.X//16,ent.Y//16),),world)
-                    mid = len(path)//2
-                    self.PATH = path[:mid+1]
-                    ent.PATH = path[:mid:-1]
-                    self.set_dir()
-                    self.scale_sprite(world.SCALE)
-                    ent.set_dir()
-                    ent.scale_sprite(world.SCALE)
-                    self.OTHER = ent
-                    ent.OTHER = self
+        if self.TASK!="MEET":
+            for ent in world.ENTITIES:
+                if ent.NAME != self.NAME and abs(self.X-ent.X) < 160 and abs(self.Y-ent.Y) < 80:
+                    #calculate probability of meeting
+                    prob = self.PERSON.relationship[ent.NAME]*self.PERSON.energy
+                    if random.random() < prob:
+                        #release currently occupied spaces
+                        if (self.X//16,self.Y//16) in world.OCCUPIED:
+                            world.OCCUPIED.remove((self.X//16,self.Y//16))
+                        if (ent.X//16,ent.Y//16) in world.OCCUPIED:
+                            world.OCCUPIED.remove((ent.X//16,ent.Y//16))
+                        #setting aside the current task
+                        if self.NEXT_TASK == "" or world.TASK_PRIORITY[self.NEXT_TASK] <= world.TASK_PRIORITY[self.TASK]:
+                            self.NEXT_TASK = self.TASK
+                        if ent.NEXT_TASK == "" or world.TASK_PRIORITY[ent.NEXT_TASK] <= world.TASK_PRIORITY[ent.TASK]:
+                            ent.NEXT_TASK = ent.TASK
+                        #initialising the meeting
+                        self.PERSON.energy -= 0.05
+                        ent.PERSON.energy -= 0.05
+                        self.MEET = True
+                        self.TASK = "MEET"
+                        self.STATE = "WALK"
+                        self.FRAME = 0
+                        ent.TASK = "MEET"
+                        ent.STATE = "WALK"
+                        ent.FRAME = 0
+                        path = pathfinder((self.X//16,self.Y//16),((ent.X//16,ent.Y//16),),world)
+                        mid = len(path)//2
+                        self.PATH = path[:mid]
+                        print(self.PATH)
+                        ent.PATH = path[:mid-1:-1]
+                        print(ent.PATH)
+                        self.set_dir()
+                        self.scale_sprite(world.SCALE)
+                        ent.set_dir()
+                        ent.scale_sprite(world.SCALE)
+                        self.OTHER = ent
+                        ent.OTHER = self
     
     def meet(self):
+        print(True)
+        self.PATH = []
         AI.conversation(self.PERSON,self.OTHER.PERSON,display = True)
     
     def update(self, dt, world):
@@ -762,7 +775,7 @@ class Entity:
                     elif self.PATH == []:
                         self.STATE = "IDLE"
                         self.FRAME = 0
-                        self.TASK = "IDLE"
+                        self.ACTION_DONE = True
                         xdiff = (self.OTHER.X)-self.X
                         ydiff = (self.OTHER.Y)-self.Y
                         if xdiff > 0:
@@ -775,8 +788,31 @@ class Entity:
                             self.FACING = "N"
                         self.scale_sprite(world.SCALE)
                         if self.MEET:
+                            self.MEET = False
                             self.meet()
-                if self.TASK == "MEET":
+                if not self.ACTION_DONE:
+                    self.PATH.append(next_cell)
+            elif self.PERSON.is_in_conversation == False:
+                self.update_task(world)
+        elif self.TASK == "COME BACK HOME":
+            if self.PATH != []:
+                next_cell = self.PATH.pop()
+                self.PATH.append(next_cell)
+                distance = self.SPEED*dt
+                while distance>0:
+                    distance, passed = self.update_distance(distance,next_cell)
+                    if passed and self.PATH!=[]:
+                        next_cell = self.PATH.pop()
+                        self.scale_sprite(world.SCALE)
+                    elif not passed:
+                        self.PATH.append(next_cell)
+                    elif self.PATH == [] and (self.X//16,self.Y//16) in self.INTERACTABLE["Seat"]:
+                        self.STATE = "IDLE"
+                        self.FRAME = 0
+                        self.TASK = "IDLE"
+                        self.FACING = self.INTERACTABLE["Seat_Dir"][(self.X//16,self.Y//16)]
+                        self.scale_sprite(world.SCALE)
+                if self.TASK == "COME BACK HOME":
                     self.PATH.append(next_cell)
         if self.STATE == "WALK" and self.TASK != "MEET":
             self.check_surround(world)
@@ -797,6 +833,8 @@ class Entity:
         if self.PERSON.schedule[time] in world.TASK_PRIORITY.keys():
             if self.NEXT_TASK == "":
                 if world.TASK_PRIORITY[self.TASK] <= world.TASK_PRIORITY[self.PERSON.schedule[time]]:
+                    self.PERSON.energy -= 0.05
+                    print(self.NAME,self.PERSON.energy)
                     self.TASK = self.PERSON.schedule[time]
                     if self.TASK in ["COOK","EXCERCISE"]:
                         self.TASK_INDEX = 0
@@ -815,8 +853,11 @@ class Entity:
             self.init_task(world)
     
     def init_task(self,world):
+        print(world.OCCUPIED)
         if (self.X//16,self.Y//16) in world.OCCUPIED:
             world.OCCUPIED.remove((self.X//16,self.Y//16))
+        if self.PATH != [] and self.PATH[0] in world.OCCUPIED:
+            world.OCCUPIED.remove(self.PATH[0])
         if self.TASK == "SLEEP" and (self.X//16,self.Y//16) not in self.INTERACTABLE["Bed"]:
             #getting ready for walking to bed
             self.STATE = "WALK"
@@ -902,6 +943,14 @@ class Entity:
             while(loc == (self.X//16,self.Y//16) or loc in world.OCCUPIED):
                 loc = random.choice(world.LOCATIONS["Market"]["Items"])
             self.PATH = pathfinder((self.X//16,self.Y//16),(loc,),world)
+            #setting facing direction
+            self.set_dir()
+            self.scale_sprite(world.SCALE)
+        elif self.TASK == "COME BACK HOME" and (self.X//16,self.Y//16) not in self.INTERACTABLE["Seat"]:
+            #get path to seat
+            self.STATE = "WALK"
+            self.FRAME = 0
+            self.PATH = pathfinder((self.X//16,self.Y//16),self.INTERACTABLE["Seat"],world)
             #setting facing direction
             self.set_dir()
             self.scale_sprite(world.SCALE)
