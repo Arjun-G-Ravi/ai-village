@@ -133,8 +133,8 @@ RELATIONSHIP:number.(Write only the number. Don't add any text here)''')
                 person2.memory[person1.name] += conversation[9: ]
             if 'RELATIONSHIP:' or 'RELATIONSHIP :' in conversation:
                 matches = re.findall(r'\b0\.\d+\b', conversation)
-                if matches: person1.relationship[person2.name] = matches[0]
-                if matches: person2.relationship[person1.name] = matches[0]
+                if matches: person1.relationship[person2.name] = float(matches[0])
+                if matches: person2.relationship[person1.name] = float(matches[0])
 
         person1.energy -= random.randint(1,3)*0.1
         person1.energy = round(person1.energy, 1)
@@ -160,7 +160,6 @@ class ScheduleMaker:
                         print('WRONG ACTIONS:', a)
                         if 'LUNCH' in a or 'FOOD' in a or 'EAT' in a or 'BREAKFAST' in a or 'DINNER' in a: schedule[t] = 'EAT'
                         elif 'SHOWER' in a: schedule[t] = 'BATH'
-                        elif 'COME BACK' in a: schedule[t] = 'COME BACK HOME'
                         else: to_remove.append(t)
         for i in to_remove: schedule.pop(i)
         return schedule
