@@ -155,7 +155,6 @@ class ScheduleMaker:
         self.person = person_object
         with open('./actions.txt','r') as f:
             self.actions = f.read().split('\n')
-            self.actions.remove('TALK')
     
     def clean_wrong_schedule(self, schedule):
         to_remove = []
