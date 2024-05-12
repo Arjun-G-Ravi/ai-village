@@ -60,6 +60,7 @@ def pathfinder(start,end,world):
                 parent[child] = node
     return []
 
+#object for the display window
 class Window:
     #game attributes
     DRAGGING = False
@@ -82,7 +83,7 @@ class Window:
         self.WINDOW_WIDTH,self.WINDOW_HEIGHT = pygame.display.get_window_size()
         #instantiate the world
         self.WORLD = World(person_list)
-        self.FONT = pygame.font.SysFont("calibri", 16)
+        self.FONT = pygame.font.SysFont("calibri", 24)
         #start the event loop
         self.event_loop()
 
@@ -157,6 +158,7 @@ class Window:
         
         pygame.display.flip()
 
+#object for the environment the agents are acting on
 class World:
     #world attributes
     SCALE = 1
@@ -193,6 +195,7 @@ class World:
     TIME = 10
     MAX_TIME = 48         # 24 * 2 (30 minute intervals)
     DARKNESS = 150
+    RESCHEDULED = True
     #important locations
     LOCATIONS = {
         "House1" : {
@@ -246,8 +249,13 @@ class World:
             "Cart" : ((79,63),(105,63)),
             "Items" : ((84,58),(87,54),(85,53),(85,55),(87,51),(89,51),(91,51),(93,51),
                 (96,51),(98,51),(92,54),(90,53),(95,53),(95,54),(100,55),(101,51)),
-            "Seat" : ((97,57),(101,57)),
-            "Counter" : ((95,57),(99,57))
+            "Seat" : ((97,57),(101,57))
+        },
+        "Workplace" : ((97,57),(101,57),(86,10)),
+        "Workplace_data" : {
+            (97,57) : ("SIT", "W"),
+            (101,57) : ("SIT", "W"),
+            (86,10) : ("IDLE", "S")
         }
     }
     
@@ -293,7 +301,11 @@ class World:
             AI.create_schedule(obj)
             print("\n"+"-"*20+"\nSchedule for",obj.name)
             print(obj.schedule)
-            entity = Entity(obj.name, r"./Sprites/Sample_Character.png",self.SCALE,obj,self.LOCATIONS["House"+str((i+1)%4)],self)
+            workplace = None
+            if i < len(self.LOCATIONS["Workplace"])-1:
+                workplace = self.LOCATIONS["Workplace"][i]
+            print(workplace)
+            entity = Entity(obj.name, r"./Sprites/Sample_Character.png",self.SCALE,obj,self.LOCATIONS["House"+str((i%4)+1)],workplace,self)
             self.ENTITIES.append(entity)
     
     def set_scale(self,scale):
@@ -322,7 +334,7 @@ class World:
         #render the world texture
         surface.blit(self.SCALED_TEXTURE, (self.X, self.Y))
         self.draw_entities(surface)
-        #surface.blit(self.SKY, (0,0))
+        surface.blit(self.SKY, (0,0))
     
     def draw_entities(self,surface):
         #draws all the entities in the world
@@ -344,6 +356,14 @@ class World:
             self.SKY.fill((0,0,0,int(self.DARKNESS)))
         for entity in self.ENTITIES:
             entity.update(dt,self)
+        if self.get_time() == "22:00" and self.RESCHEDULED:
+            self.RESCHEDULED = False
+        if self.get_time() == "23:30" and not self.RESCHEDULED:
+            for entity in self.ENTITIES:
+                obj = entity.PERSON
+                AI.create_schedule(obj)
+                print(obj.schedule)
+            self.RESCHEDULED = True
     
     def check_collision(self, sprite):
         if pygame.sprite.spritecollide(sprite,self.SPRITE_GROUP,False,pygame.sprite.collide_mask):
@@ -357,9 +377,6 @@ class World:
         else:
             time = str(time)+":30"
         return time
-    
-def get_cell(x,y):
-    x = (x - x%16)//16
 
 class Entity:
     #entity attributes
@@ -385,11 +402,12 @@ class Entity:
     OTHER = None
     MEET = False
     
-    def __init__(self, name, path, scale, person, house, world):
+    def __init__(self, name, path, scale, person, house, workplace, world):
         self.NAME = name
         self.PERSON = person
         self.PATH = list()
         self.INTERACTABLE = house
+        self.WORK_PLACE = workplace
         print(self.NAME+"'s attributes initialised")
         #set current location to bed
 
@@ -520,18 +538,13 @@ class Entity:
                         self.STATE = "WALK"
                         self.FRAME = 0
                         ent.TASK = "MEET"
-                        ent.STATE = "WALK"
+                        ent.STATE = "IDLE"
                         ent.FRAME = 0
                         path = pathfinder((self.X//16,self.Y//16),((ent.X//16,ent.Y//16),),world)
                         mid = len(path)//2
-                        self.PATH = path[:mid]
-                        print(self.PATH)
-                        ent.PATH = path[:mid-1:-1]
-                        print(ent.PATH)
+                        self.PATH = path
                         self.set_dir()
                         self.scale_sprite(world.SCALE)
-                        ent.set_dir()
-                        ent.scale_sprite(world.SCALE)
                         self.OTHER = ent
                         ent.OTHER = self
     
@@ -814,6 +827,26 @@ class Entity:
                         self.scale_sprite(world.SCALE)
                 if self.TASK == "COME BACK HOME":
                     self.PATH.append(next_cell)
+        elif self.TASK == "GO TO WORK":
+            if self.PATH != []:
+                next_cell = self.PATH.pop()
+                self.PATH.append(next_cell)
+                distance = self.SPEED*dt
+                while distance>0:
+                    distance, passed = self.update_distance(distance,next_cell)
+                    if passed and self.PATH!=[]:
+                        next_cell = self.PATH.pop()
+                        self.scale_sprite(world.SCALE)
+                    elif not passed:
+                        self.PATH.append(next_cell)
+                    elif self.PATH == [] and (self.X//16,self.Y//16) == self.WORK_PLACE:
+                        self.STATE = world.LOCATIONS["Workplace_data"][(self.X//16,self.Y//16)][0]
+                        self.FRAME = 0
+                        self.TASK = "IDLE"
+                        self.FACING = world.LOCATIONS["Workplace_data"][(self.X//16,self.Y//16)][1]
+                        self.scale_sprite(world.SCALE)
+                if self.TASK == "GO TO WORK":
+                    self.PATH.append(next_cell)
         if self.STATE == "WALK" and self.TASK != "MEET":
             self.check_surround(world)
     
@@ -853,7 +886,6 @@ class Entity:
             self.init_task(world)
     
     def init_task(self,world):
-        print(world.OCCUPIED)
         if (self.X//16,self.Y//16) in world.OCCUPIED:
             world.OCCUPIED.remove((self.X//16,self.Y//16))
         if self.PATH != [] and self.PATH[0] in world.OCCUPIED:
@@ -869,6 +901,7 @@ class Entity:
         elif self.TASK == "WAKE UP" and (self.X//16,self.Y//16) not in self.INTERACTABLE["Toilet"]:
             #get path to a tiolet sink
             self.STATE = "WALK"
+            self.PERSON.energy = 1
             self.FRAME = 0
             self.START_TIME = world.TIME
             self.PATH = pathfinder((self.X//16,self.Y//16),self.INTERACTABLE["Toilet"],world)
@@ -922,6 +955,7 @@ class Entity:
             #get path to shower
             self.STATE = "WALK"
             self.FRAME = 0
+            self.PERSON.energy += 0.1
             self.PATH = pathfinder((self.X//16,self.Y//16),self.INTERACTABLE["Bath"],world)
             #setting facing direction
             self.set_dir()
@@ -951,6 +985,15 @@ class Entity:
             self.STATE = "WALK"
             self.FRAME = 0
             self.PATH = pathfinder((self.X//16,self.Y//16),self.INTERACTABLE["Seat"],world)
+            #setting facing direction
+            self.set_dir()
+            self.scale_sprite(world.SCALE)
+        elif self.TASK == "GO TO WORK" and self.WORK_PLACE != None and (self.X//16,self.Y//16) != self.WORK_PLACE:
+            #get path to chair
+            self.STATE = "WALK"
+            self.FRAME = 0
+            self.START_TIME = world.TIME
+            self.PATH = pathfinder((self.X//16,self.Y//16),(self.WORK_PLACE,),world)
             #setting facing direction
             self.set_dir()
             self.scale_sprite(world.SCALE)
