@@ -863,9 +863,15 @@ class Entity:
         self.PATH = path.copy()
     
     def change_task(self, time, world):
+        if self.PERSON.energy < 0:
+            print(self.NAME,"is tired")
+            self.TASK = "SLEEP"
+            self.PERSON.schedule.clear()
+            self.init_task(world)
+            return
         if self.PERSON.schedule[time] in world.TASK_PRIORITY.keys():
             if self.NEXT_TASK == "":
-                if world.TASK_PRIORITY[self.TASK] <= world.TASK_PRIORITY[self.PERSON.schedule[time]]:
+                if world.TASK_PRIORITY[self.TASK] <= world.TASK_PRIORITY[self.PERSON.schedule[time]] or self.TASK == "SLEEP":
                     self.PERSON.energy -= 0.05
                     print(self.NAME,self.PERSON.energy)
                     self.TASK = self.PERSON.schedule[time]
