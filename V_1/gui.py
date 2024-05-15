@@ -360,6 +360,7 @@ class World:
             self.RESCHEDULED = False
         if self.get_time() == "23:30" and not self.RESCHEDULED:
             for entity in self.ENTITIES:
+                entity.MEET_COUNT = 1
                 obj = entity.PERSON
                 AI.create_schedule(obj)
                 print(obj.schedule)
@@ -401,6 +402,7 @@ class Entity:
     NEXT_TASK = ""
     OTHER = None
     MEET = False
+    MEET_COUNT = 1
     
     def __init__(self, name, path, scale, person, house, workplace, world):
         self.NAME = name
@@ -518,13 +520,18 @@ class Entity:
             for ent in world.ENTITIES:
                 if ent.NAME != self.NAME and abs(self.X-ent.X) < 160 and abs(self.Y-ent.Y) < 80:
                     #calculate probability of meeting
-                    prob = self.PERSON.relationship[ent.NAME]*self.PERSON.energy
+                    prob = self.PERSON.relationship[ent.NAME]*self.PERSON.energy*(1/self.MEET_COUNT)
                     if random.random() < prob:
+                        self.MEET_COUNT += 1
                         #release currently occupied spaces
                         if (self.X//16,self.Y//16) in world.OCCUPIED:
                             world.OCCUPIED.remove((self.X//16,self.Y//16))
+                        if self.PATH != [] and self.PATH[0] in world.OCCUPIED:
+                            world.OCCUPIED.remove(self.PATH[0])
                         if (ent.X//16,ent.Y//16) in world.OCCUPIED:
                             world.OCCUPIED.remove((ent.X//16,ent.Y//16))
+                        if ent.PATH != [] and ent.PATH[0] in world.OCCUPIED:
+                            world.OCCUPIED.remove(ent.PATH[0])
                         #setting aside the current task
                         if self.NEXT_TASK == "" or world.TASK_PRIORITY[self.NEXT_TASK] <= world.TASK_PRIORITY[self.TASK]:
                             self.NEXT_TASK = self.TASK
@@ -866,14 +873,15 @@ class Entity:
         if self.PERSON.energy < 0:
             print(self.NAME,"is tired")
             self.TASK = "SLEEP"
+            self.PERSON.energy = 1
             self.PERSON.schedule.clear()
             self.init_task(world)
             return
         if self.PERSON.schedule[time] in world.TASK_PRIORITY.keys():
             if self.NEXT_TASK == "":
+                #print(self.NAME,self.TASK)
                 if world.TASK_PRIORITY[self.TASK] <= world.TASK_PRIORITY[self.PERSON.schedule[time]] or self.TASK == "SLEEP":
                     self.PERSON.energy -= 0.05
-                    print(self.NAME,self.PERSON.energy)
                     self.TASK = self.PERSON.schedule[time]
                     if self.TASK in ["COOK","EXCERCISE"]:
                         self.TASK_INDEX = 0
@@ -892,6 +900,7 @@ class Entity:
             self.init_task(world)
     
     def init_task(self,world):
+        print(world.OCCUPIED)
         if (self.X//16,self.Y//16) in world.OCCUPIED:
             world.OCCUPIED.remove((self.X//16,self.Y//16))
         if self.PATH != [] and self.PATH[0] in world.OCCUPIED:
