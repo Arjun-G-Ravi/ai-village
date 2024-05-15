@@ -175,10 +175,11 @@ class ScheduleMaker:
                         Available actions: {self.actions}
                         Base character: {self.person.base_character}
                         Relevant memory: {self.person.memory}
-                        Write the actions and the time of start of action in a dictionary format. The time for dictionary can start at anywhere between 5:00 and 9:00 by the action "WAKE UP" and end between 20:00 and 22:00 by the action "SLEEP".''' + 
+                        Write the actions and the time of start of action in a dictionary format. The time for dictionary can start at anywhere between 6:00 and 12:00 by the action "WAKE UP" and end between 20:00 and 22:00 by the action "SLEEP".''' + 
                         '''
                         Format: {"Start time for activity":"Name of activity"}
-                        Example: {"6:00":"WAKE UP", "7:00":"EXCERCISE", "9:00":"BATH", "10:00":"COOK", "14:00":"EAT", "15:00":"WATCH TV", "17:00":"GO TO MARKET", "19:30":"COME BACK HOME", "20:00":"EAT", "21:00":"SLEEP"}.
+                        Example 1: {"7:00":"WAKE UP", "9:00":"BATH", "10:00":"COOK", "14:00":"EAT", "15:00":"WATCH TV", "17:00":"GO TO MARKET", "19:30":"COME BACK HOME", "20:00":"EAT", "21:00":"SLEEP"}.
+                        Example 2: {"6:00":"WAKE UP", "7:30":"EXCERCISE", "9:00":"BATH", "10:00":"COOK", "14:00":"EAT", "15:00":"WATCH TV", "17:00":"GO TO MARKET", "19:30":"COME BACK HOME", "20:00":"EAT", "21:00":"SLEEP"}.
                         The time block should ideally be a integer time or integer-and half time. MAKE SURE THAT ALL THE ACTIONS ARE GENERATED FROM THE AVAILABLE ACTIONS. Now generate schedule: 
                         ''')
         pattern = r'\{(.*?)\}'

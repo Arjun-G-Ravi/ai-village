@@ -1,4 +1,4 @@
-John: Loud, Outgoing, Jovial, Nervous, Energetic.|
-Terry: Quiet, Nerdy, Obsessive, Cinephile, Geek.|
-Ben: Strong, Atlethic, Obsessive, Hard working, loves to read.|
-Jane: Lazy, Wakes up late, loves to sleep, doesnt do much work,loves to watch TV, loves to play video games.|
+John: Gentle, Kind, Empathetic, Compassionate, Loves to Help, loves everybody, loves to network.|
+Jane: Quiet, Nerdy, Obsessive, loves to read books, introvert, Geek, wakes up at 8:00.|
+Terry: Strong, Atlethic, Obsessive, Hard working, loves to read, wakes up at 6:00, loves to excercise.|
+Ben: Lazy, Wakes up 11:00, doesnt do much work,loves to watch TV, loves to play video games.|
