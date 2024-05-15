@@ -1,4 +1,4 @@
-John: Gentle, Kind, Empathetic, Compassionate, Loves to Help, loves everybody, loves to network.|
-Jane: Quiet, Nerdy, Obsessive, loves to read books, introvert, Geek, wakes up at 8:00.|
-Terry: Strong, Atlethic, Obsessive, Hard working, loves to read, wakes up at 6:00, loves to excercise.|
-Ben: Lazy, Wakes up 11:00, doesnt do much work,loves to watch TV, loves to play video games.|
+John: Gentle, Kind, Empathetic, Compassionate, Loves to Help, loves everybody, loves to network, wakes up at 8;00, must go to work at 10:00 |
+Jane: Quiet, Nerdy, Obsessive, loves to read books, introvert, Geek, wakes up at 7;00, must go to work at 10;00|
+Terry: Strong, Atlethic, Obsessive, Hard working, loves to read, wakes up at 6;00, loves to excercise, must go to work at 9;00.|
+Ben: Lazy, Wakes up 11;00, doesnt do much work, watches a lot of TV, loves to play video games, must go to market at 13;00.|

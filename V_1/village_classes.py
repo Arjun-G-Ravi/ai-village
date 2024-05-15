@@ -178,8 +178,11 @@ class ScheduleMaker:
                         Write the actions and the time of start of action in a dictionary format. The time for dictionary can start at anywhere between 6:00 and 12:00 by the action "WAKE UP" and end between 20:00 and 22:00 by the action "SLEEP".''' + 
                         '''
                         Format: {"Start time for activity":"Name of activity"}
-                        Example 1: {"7:00":"WAKE UP", "9:00":"BATH", "10:00":"COOK", "14:00":"EAT", "15:00":"WATCH TV", "17:00":"GO TO MARKET", "19:30":"COME BACK HOME", "20:00":"EAT", "21:00":"SLEEP"}.
-                        Example 2: {"6:00":"WAKE UP", "7:30":"EXCERCISE", "9:00":"BATH", "10:00":"COOK", "14:00":"EAT", "15:00":"WATCH TV", "17:00":"GO TO MARKET", "19:30":"COME BACK HOME", "20:00":"EAT", "21:00":"SLEEP"}.
+                        Example 1: {"7:00":"WAKE UP", "9:00":"BATH", "10:00":"COOK", "11:00":"EAT","12:00":"GO TO WORK", "19:30":"COME BACK HOME", "20:00":"EAT", "21:00":"SLEEP"}.
+                        Example 2: {"6:00":"WAKE UP", "7:00":"EXCERCISE", "8:00":"BATH", "9:00":"COOK", "10:00":"EAT", "11:00":"WATCH TV", "17:00":"GO TO MARKET", "19:30":"COME BACK HOME", "20:00":"EAT", "21:00":"SLEEP"}.
+                        Example 3: {"8:00":"WAKE UP",  "9:00":"EAT", "10:00":"GO TO WORK", "15:00":"COME BACK HOME", "16:00":"EAT", "16:30":"PLAY VIDEO GAMES", "17:00":"EXCERCISE","18:00":"BATH", "19:00":"EAT","21:00":"SLEEP"}.
+                        Example 4: {"11:00":"WAKE UP", "12:00":"EAT", "13:00":"GO TO MARKET", "15:00":"COME BACK HOME", "16:00":"EAT", "17:00":"WATCH TV", "20:00":"BATH", "21:00":"EAT", "22:00":"SLEEP"}.
+                        Example 5: {"6:00":"WAKE UP", "7:00":"READ", "8:00":"BATH", "9:00":"COOK", "10:00":"GO TO WORK", "17:30":"COME BACK HOME", "19:00":"EAT","20:00":"READ", "21:00":"SLEEP"}.
                         The time block should ideally be a integer time or integer-and half time. MAKE SURE THAT ALL THE ACTIONS ARE GENERATED FROM THE AVAILABLE ACTIONS. Now generate schedule: 
                         ''')
         pattern = r'\{(.*?)\}'
