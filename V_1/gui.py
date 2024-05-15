@@ -900,7 +900,6 @@ class Entity:
             self.init_task(world)
     
     def init_task(self,world):
-        print(world.OCCUPIED)
         if (self.X//16,self.Y//16) in world.OCCUPIED:
             world.OCCUPIED.remove((self.X//16,self.Y//16))
         if self.PATH != [] and self.PATH[0] in world.OCCUPIED:
@@ -1014,15 +1013,16 @@ class Entity:
             self.scale_sprite(world.SCALE)
     
     def set_dir(self):
-        loc = self.PATH.pop()
-        xdiff = (loc[0]*16)-self.X
-        ydiff = (loc[1]*16)-self.Y
-        self.PATH.append(loc)
-        if xdiff > 0:
-            self.FACING = "E"
-        elif xdiff < 0:
-            self.FACING = "W"
-        elif ydiff > 0:
-            self.FACING = "S"
-        else:
-            self.FACING = "N"
+        if self.PATH!=[]:
+            loc = self.PATH.pop()
+            xdiff = (loc[0]*16)-self.X
+            ydiff = (loc[1]*16)-self.Y
+            self.PATH.append(loc)
+            if xdiff > 0:
+                self.FACING = "E"
+            elif xdiff < 0:
+                self.FACING = "W"
+            elif ydiff > 0:
+                self.FACING = "S"
+            else:
+                self.FACING = "N"
