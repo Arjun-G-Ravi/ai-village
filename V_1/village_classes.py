@@ -212,18 +212,6 @@ class ScheduleMaker:
                         Now generate the modified schdule:
                         ''')
 
-
-
-        # write_out = writer.generate(f'''Using the base character of the AI, memory and factor that affect schedule, write the actions performed by the AI agents for a day.
-        #                 previous schedule: {self.person.schedule}
-        #                 Factor that affect schedule: {reason}
-        #                 possible action pool: {self.actions}
-        #                 Change the schedule with the help of the above factor. Ensure that all the actions in the schedule comes from the given action pool. The time block should ideally be a integer time or integer-and half time.
-        #                 If the agent is meeting to somebody at any place, the agent have to first reach that place(takes an hour) and then perform the action MEET for atleast an hour. Dont put any other actions there.''' + 
-        #                 '''
-        #                 Format: {"Start time for activity":"Name of activity"}
-        #                 Example: {"6:00":"WAKE UP", "6:30":"BRUSH", "7:00":"EXCERCISE", "8:00":"DANCE", "9:00":"BATH", "10:00":"COOK", "14:30":"EAT", "15:00":"SLEEP", "17:00":"WAKE UP", "17.30":"READ", "19:00":"BATH", "20:00":"EAT", "21:00":"SLEEP"}.
-        #                 Do not add any unnecessary data or ACTIONS to the schedule and carefully modify the schedule.''')
         pattern = r'\{(.*?)\}'
         data = '{' +re.findall(pattern, write_out)[0] + '}'
         final_schedule = ast.literal_eval(data) # returns the string as a python expression
@@ -231,7 +219,7 @@ class ScheduleMaker:
         self.person.schedule = final_schedule
 
  
-
+'''Tests'''
 if __name__ == '__main__':
 
     # Test creating character behaviour by AI
@@ -264,16 +252,6 @@ if __name__ == '__main__':
     print('-'*20)
     ai.change_schedule(p1, 'Tom decided to meet with Janet at 15:00 in the market.')
     print(p1.schedule)
-
-
-
-
-
-
-
-
-
-
 
     #################### OLD TESTS ############################
 

@@ -1,7 +1,9 @@
+'''
+Run this to test conversation between agents.
+'''
 import random
 import village_classes
 import gui
-
 
 person_list = village_classes.CreatePerson().person_list()
 objects = []
