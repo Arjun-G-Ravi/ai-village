@@ -4,7 +4,11 @@ import threading
 import ast
 from groq import Groq
 from Person import Person
+from dotenv import load_dotenv
+import os
 
+
+load_dotenv()  # Load the .env file
 class AI_agents():
     '''This class is a abstraction of all other classes. This is the only class to be used on other parts. '''
     def __init__(self):
@@ -70,7 +74,7 @@ class LLM:
     def __init__(self, temperature = 0.2, top_p=0.3):
         self.temperature = temperature
         self.top_p = top_p
-        self.client = Groq(api_key='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')
+        self.client = Groq(api_key=os.getenv("api_key"))
 
     def generate(self, inp):
         '''Generates output using Google API, given the input.'''
