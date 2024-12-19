@@ -9,9 +9,9 @@ This is a project where the LLMs control the actions of the villagers in a villa
 ## How to run
 1. Create a `.env` file and add your groq api key there as:
    `api_key = 'your_api_key'`
-2. In the Sprites file, add the custom sprites that you want
+2. If you want to add custom sprites, replace the sprites in the Sprites directory with that one. 
 3. Install all requirements using `pip install requirements.txt`
-4. Now run `cd v_1`
+4. Go to the `generated_base_characters.txt` file and change the base characters of the villages in the way you want. This will drastically affect the villager's life.
 5. Now, run `python main.py`
 
 ## Contributors

@@ -1,2 +1,4 @@
 John: Loud, Boisterous, Jovial, Outgoing, Hilarious.|
 Terry: quiet, reserved, movie buff, comic book fan, introverted.|
+Tom: Snooze, Procrastinate, Slacker, Couch, Lethargic.|
+Lynn: Fit, Agile, Powerful, Confident, Dominant.|

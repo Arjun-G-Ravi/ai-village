@@ -227,9 +227,9 @@ if __name__ == '__main__':
     P.clear()
     P.write_new_character('John', 'super funny and extrovert')
     P.write_new_character('Terry', 'introvert who loves marvel movies')
-    # P.write_new_character('Tom', 'lazy')
-    # P.write_new_character('Lynn', 'super strong and atlethic')
-    # P.write_new_character('Tim', 'loves cows')
+    P.write_new_character('Tom', 'lazy')
+    P.write_new_character('Lynn', 'super strong and atlethic')
+    P.write_new_character('Tim', 'loves cows')
     char_dict = P.person_list()
 
     p1 = create_new_person('John', char_dict)
